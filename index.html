@@ -250,7 +250,10 @@
   <div class="progress-panel" id="progress-panel">
     <div class="progress-header">
       <h3>// Processando candidatos</h3>
-      <span id="progress-count" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">0 / 0</span>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span id="progress-count" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">0 / 0</span>
+        <button id="btn-stop" onclick="pararAnalise()" style="font-family:'Space Mono',monospace;font-size:11px;background:none;border:1px solid var(--error);color:var(--error);padding:5px 12px;border-radius:3px;cursor:pointer;display:none">■ Parar</button>
+      </div>
     </div>
     <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
     <div class="candidate-log" id="candidate-log"></div>
@@ -632,6 +635,14 @@ function normalizeLiResult(raw) {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+let stopRequested = false;
+
+function pararAnalise() {
+  stopRequested = true;
+  document.getElementById("btn-stop").textContent = "Parando...";
+  document.getElementById("btn-stop").disabled = true;
+}
+
 // ─── MAIN FLOW ────────────────────────────────────────────────────
 async function iniciarAnalise() {
   const sheetsUrl = document.getElementById("sheets-url").value.trim();
@@ -650,10 +661,14 @@ async function iniciarAnalise() {
 
   const btn = document.querySelector(".btn-analyze");
   btn.disabled = true;
+  stopRequested = false;
   allResults = [];
   document.getElementById("progress-panel").classList.add("show");
   document.getElementById("results-panel").classList.remove("show");
   document.getElementById("candidate-log").innerHTML = "";
+  document.getElementById("btn-stop").style.display = "inline-block";
+  document.getElementById("btn-stop").textContent = "■ Parar";
+  document.getElementById("btn-stop").disabled = false;
 
   try {
     sheetRows = await fetchSheetData(sheetsUrl, sheetName);
@@ -713,7 +728,23 @@ async function iniciarAnalise() {
     document.getElementById("progress-bar").style.width = pct + "%";
     document.getElementById("progress-count").textContent = `${i + 1} / ${rows.length}`;
 
-    if (i < rows.length - 1) await sleep(2000);
+    if (stopRequested) {
+      updateLogItem(i, "done", "✓ Concluído");
+      break;
+    }
+
+    if (i < rows.length - 1) await sleep(8000);
+  }
+
+  document.getElementById("btn-stop").style.display = "none";
+
+  if (stopRequested && allResults.length > 0) {
+    const stoppedMsg = document.getElementById("global-error");
+    stoppedMsg.style.background = "rgba(255,184,0,0.08)";
+    stoppedMsg.style.borderColor = "rgba(255,184,0,0.3)";
+    stoppedMsg.style.color = "var(--warn)";
+    stoppedMsg.textContent = `⚠ Análise interrompida após ${allResults.length} candidato(s). Exporte o CSV para salvar os resultados parciais.`;
+    stoppedMsg.classList.add("show");
   }
 
   renderCards();
