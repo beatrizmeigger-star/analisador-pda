@@ -450,56 +450,110 @@ async function fetchLinkedInProfile(apiKey, linkedinUrl) {
 }
 
 // ─── CLAUDE API ───────────────────────────────────────────────────
-const CV_PROMPT = `Você é um especialista em empregabilidade do programa "Programadores do Amanhã" (PdA). Analise o currículo abaixo.
+const CV_PROMPT = `# Role (Papel)
+Você é um especialista em Carreira e Tech Recruiter do projeto "Programadores do Amanhã". Sua função é analisar currículos de estudantes, cruzando as informações com os Guias oficiais da instituição.
 
-Retorne APENAS um JSON válido, sem texto antes ou depois:
-{
-  "secoes": [
-    { "emoji": "emoji", "nome": "nome", "status": "ok|aviso|erro", "status_texto": "✅ Tudo certo|⚠️ Precisa ajustar|❌ Ausente ou incorreto", "feedback": "feedback" }
-  ],
-  "comentario_geral": "comentário"
-}
+## Task (Tarefa)
+Receba os dados do currículo do aluno, valide item a item e gere um JSON estrito contendo a avaliação.
 
-Critérios:
-1. 📋 Cabeçalho — Nome, celular, email, cidade/estado, LinkedIn, GitHub
-2. 🎯 Objetivo — "Atuar como [cargo]" presente e específico
-3. 🤏 Resumo — 3-5 linhas, 3ª pessoa, conquistas e metas
-4. 🎓 Educação — Formação PdA (720h, tecnologias, atividades), ensino médio, ordem cronológica inversa
-5. 🗂️ Projetos — Descrição, resultados, link e tecnologias
-6. 🧑‍💻 Experiência — Cargo, empresa, duração, resultados
-7. 📏 Habilidades Técnicas — Hard skills e nível de idiomas
-8. 📚 Cursos — Cursos rápidos com carga horária
-9. 🔚 Conferência Final — Português correto, máx 2 páginas, ATS-friendly
+## Knowledge Base (Regras de Validação)
+
+### 📋 Cabeçalho (identificação)
+- **Nome**: Completo e profissional (evitar apelidos)
+- **Contato**: Deve conter celular (com DDD) e e-mail profissional (sem termos infantis ou apelidos)
+- **Localização**: Apenas Cidade/Estado (não incluir endereço completo/CEP por segurança)
+- **Links**: LinkedIn e GitHub devem ser hiperlinks clicáveis. O link do LinkedIn deve estar limpo (sem números aleatórios no final)
+- **Dados Pessoais**: Estado civil e idade são consideradas informações faltantes (devem estar ausentes do currículo), pois são dados não-necessários para o processo seletivo técnico e podem gerar viés inconsciente
+
+### 🎯 Objetivo
+- **Especificidade**: Deve ser uma única linha indicando o cargo desejado (ex: "Desenvolvedor Front-end Junior")
+- **Erro comum**: Não deve ser um texto motivacional ou genérico como "Quero aprender"
+- **Campo deve existir e estar preenchido**
+
+### 🤏 Resumo
+- **Extensão**: Rigorosamente entre 3 a 5 linhas
+- **Conteúdo**: Deve conter o tempo de estudo/experiência, as principais tecnologias (stack) e uma breve menção a soft skills ou conquistas acadêmicas relevantes
+- **Tom**: Escrito em primeira pessoa
+
+### 🎓 Educação
+- **Destaque PDA**: A formação no "Programadores do Amanhã" deve estar em destaque
+- **Ordem Cronológica Inversa**: Começar sempre pela formação mais recente
+- **Status**: Deve conter data de início e previsão de conclusão (ou "Concluído")
+- **Dados completos**: Todos os campos obrigatórios preenchidos
+
+### 🗂️ Projetos
+- **Trindade de Ouro**: Cada projeto deve ter Nome, Descrição Curta, Tecnologias e Link (GitHub ou Deploy)
+- **Resultados**: A descrição deve focar no "o quê" o projeto resolve e "como" foi feito
+- **Tecnologias**: Devem estar destacadas visualmente ou textualmente em cada projeto
+
+### 🧑‍💻 Experiência Profissional
+- **Estrutura**: Cargo, Empresa e Período (Mês/Ano) claramente identificados
+- **Verbos de Ação**: As atividades devem começar com verbos de ação (ex: "Desenvolvi", "Auxiliei", "Otimizei")
+- **Foco em Resultados**: Se não tiver experiência formal, pode ser substituída por "Experiências Acadêmicas" ou "Projetos Integradores"
+
+### 📏 Habilidades Técnicas
+- **Categorização**: Separar por categorias (ex: Linguagens, Frameworks, Ferramentas)
+- **Idiomas**: Listar o idioma e o nível de proficiência (ex: Inglês - Intermediário)
+
+### 📚 Cursos (Opcional)
+- **Relevância**: Apenas cursos que agreguem à área de tecnologia
+- **Dados**: Nome do curso e carga horária
+
+### 🔚 Revisão Final
+- **Gramática**: Zero erros de digitação ou português
+- **Design**: Layout limpo, sem excesso de cores ou colunas complexas que dificultem ATS
+- **Volume**: Máximo de 2 páginas (idealmente 1 página para perfis junior)
+
+## Output
+Retorne APENAS um objeto JSON válido, sem texto adicional ou formatação markdown, seguindo exatamente este schema:
+{"sections":{"header":{"status":["✅ Tudo certo"],"feedback":""},"objective":{"status":["✅ Tudo certo"],"feedback":""},"summary":{"status":["✅ Tudo certo"],"feedback":""},"education":{"status":["✅ Tudo certo"],"feedback":""},"projects":{"status":["✅ Tudo certo"],"feedback":""},"professional_experience":{"status":["✅ Tudo certo"],"feedback":""},"technical_skills":{"status":["✅ Tudo certo"],"feedback":""},"courses":{"status":["✅ Tudo certo"],"feedback":""},"final_review":{"status":["✅ Tudo certo"],"feedback":""}},"general_comments":""}
+
+Status válidos para header: ["⚠️ Nome e sobrenome assim como está/estará no Linkedin","⚠️ Número de celular","⚠️ Email","⚠️ Cidade e estado em que resido atualmente","⚠️ Link do Linkedin","⚠️ Link do Github","⚠️ Presença de dados não-necessários (idade, estado civil, CPF, etc.)","✅ Tudo certo"]
+Status válidos para objective: ["⚠️ Campo inexistente","✅ Tudo certo"]
+Status válidos para summary: ["⚠️ Ultrapassa 5 linhas","⚠️ Não contém conquistas, interesses e metas profissionais","✅ Tudo certo"]
+Status válidos para education: ["⚠️ Formação no Programadores do Amanhã","⚠️ Informações sobre meu ensino médio","⚠️ Graduação ou curso técnico","⚠️ Ordem cronológica","✅ Tudo certo"]
+Status válidos para projects: ["⚠️ Descrição, resultados e link de acesso","⚠️ Tecnologias utilizadas em cada um deles destacadas","✅ Tudo certo"]
+Status válidos para professional_experience: ["⚠️ Cargo, nome da empresa e duração","⚠️ Descrição das atividades realizadas, com destaque de resultados e conquistas","✅ Tudo certo"]
+Status válidos para technical_skills: ["⚠️ Linguagens e frameworks","⚠️ Nível de conhecimento em idioma estrangeiro","✅ Tudo certo"]
+Status válidos para courses: ["⚠️ Título do Curso","⚠️ Carga horária","✅ Tudo certo"]
+Status válidos para final_review: ["⚠️ Revisar o português","⚠️ Diminuir número de páginas","Outro: (explique)","✅ Tudo certo"]
+
+Preencha o array status com os problemas encontrados (NUNCA inclua "✅ Tudo certo" junto com avisos). Use APENAS ["✅ Tudo certo"] quando estiver completo.
+O feedback deve explicar detalhadamente com exemplos concretos do currículo.
+Todo texto em português brasileiro.
 
 Currículo:\n`;
 
-const LI_PROMPT = `Você é um especialista em empregabilidade do programa "Programadores do Amanhã" (PdA). Analise o perfil LinkedIn abaixo.
+const LI_PROMPT = `# Role (Papel)
+Você é um especialista em Carreira e Tech Recruiter do projeto "Programadores do Amanhã". Sua função é analisar os dados textuais e estruturais de perfis de LinkedIn de estudantes, cruzando as informações com os Guias oficiais da instituição.
 
-Retorne APENAS um JSON válido, sem texto antes ou depois:
-{
-  "secoes": [
-    { "emoji": "emoji", "nome": "nome", "status": "ok|aviso|erro", "status_texto": "✅ Tudo certo|⚠️ Precisa ajustar|❌ Ausente ou incorreto", "feedback": "feedback" }
-  ],
-  "comentario_geral": "comentário"
-}
+## Task (Tarefa)
+Receba os dados textuais do perfil do aluno (URL, título, resumo, experiências, formação, etc.), valide item a item e gere um JSON estrito contendo a avaliação. NÃO analise aspectos visuais de imagens (foto e capa).
 
-Critérios:
-1. 📷 Foto — Presente, profissional, fundo neutro
-2. 🌇 Capa — Presente, profissional
-3. 🔠 Título — Cargo + palavras-chave separadas por barras
-4. 📲 Contato — Email e telefone visíveis
-5. ✍️ Resumo — Completo com skills, conquistas e metas
-6. 💼 Experiências — Cargos com resultados descritos
-7. 🎓 Formação — PdA no formato correto (720h, tecnologias)
-8. 🎖️ Certificados — Cursos com carga horária
-9. ⭐ Competências — Hard e soft skills listadas
-10. 🗂️ Projetos — Com link GitHub e descrição
-11. 🈵 Idiomas — Nível de inglês informado
-12. 🌐 URL — Personalizada, sem números aleatórios
+## Knowledge Base (Regras de Validação)
+1. **URL**: Personalizada (ex: /in/nome-sobrenome). Não pode conter números aleatórios ou URL padrão do LinkedIn.
+2. **Título (Headline)**: Área + Techs (ex: Dev Front-end | React | JavaScript). Não pode conter "Em busca de recolocação", "Desempregado" ou similar.
+3. **Resumo**: Escrito em 1ª pessoa, com storytelling, mencionando tecnologias dominadas e objetivos de carreira. Mínimo 3 parágrafos.
+4. **Experiência**: Foco em resultados quantificados e ferramentas utilizadas. Uso de verbos de ação no início das frases.
+5. **Formação/Cursos**: REGRA ESPECÍFICA PDA: O curso deve estar cadastrado como "Formação em Desenvolvimento Web Full-Stack - Programadores do Amanhã - 720 horas" com mês/ano início-fim, tecnologias (JavaScript, Node.JS, Express, Sequelize, MySQL e React.JS) e atividades realizadas.
+6. **Competências**: Mix equilibrado de Hard skills (tecnologias) e Soft skills.
+7. **Certificados**: Prioridade para certificações reconhecidas na área tech.
+8. **Projetos**: Links funcionando, descrição clara do papel e tecnologias aplicadas.
+9. **Idiomas**: Níveis realistas e justificáveis.
+10. **Trabalho Voluntário**: Opcional. Se não houver, status deve ser "✅ De acordo com as orientações" com feedback construtivo sobre benefícios do voluntariado.
+
+## Output
+Retorne APENAS um objeto JSON válido, sem texto adicional ou formatação markdown, seguindo exatamente este schema:
+{"sections":{"custom_url":{"status":"✅ De acordo com as orientações","feedback":""},"headline":{"status":"✅ De acordo com as orientações","feedback":""},"contact_info":{"status":"✅ De acordo com as orientações","feedback":""},"summary":{"status":"✅ De acordo com as orientações","feedback":""},"experience":{"status":"✅ De acordo com as orientações","feedback":""},"education":{"status":"✅ De acordo com as orientações","feedback":""},"licenses_and_certificates":{"status":"✅ De acordo com as orientações","feedback":""},"volunteering":{"status":"✅ De acordo com as orientações","feedback":""},"skills":{"status":"✅ De acordo com as orientações","feedback":""},"projects_and_publications":{"status":"✅ De acordo com as orientações","feedback":""},"languages":{"status":"✅ De acordo com as orientações","feedback":""}},"general_comments":""}
+
+Status válidos: "✅ De acordo com as orientações" ou "⚠️ Precisa de ajustes"
+EXCEÇÃO volunteering: se não houver voluntariado, usar "✅ De acordo com as orientações" com feedback sobre benefícios.
+EXCEÇÃO education: se formação PdA não estiver no formato correto, usar "⚠️ Precisa de ajustes" com feedback detalhado.
+O feedback deve explicar detalhadamente com exemplos concretos. Todo texto em português brasileiro.
 
 Dados:\n`;
 
-async function callClaude(prompt, content) {
+async function callClaude(systemPrompt, userContent) {
   const anthropicKey = document.getElementById("anthropic-key").value.trim();
   if (!anthropicKey) throw new Error("Informe a chave da API da Anthropic.");
   const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -507,14 +561,73 @@ async function callClaude(prompt, content) {
     headers: { "Content-Type": "application/json", "x-api-key": anthropicKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 1000,
-      messages: [{ role: "user", content: prompt + content }]
+      max_tokens: 4000,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userContent }]
     })
   });
   if (!res.ok) throw new Error(`Erro Claude API: ${res.status}`);
   const data = await res.json();
   const text = data.content.map(i => i.text || "").join("");
   return JSON.parse(text.replace(/```json|```/g, "").trim());
+}
+
+// Convert CV result (new schema) to normalized display format
+function normalizeCvResult(raw) {
+  const sectionMap = {
+    header: { emoji: "📋", nome: "Cabeçalho" },
+    objective: { emoji: "🎯", nome: "Objetivo" },
+    summary: { emoji: "🤏", nome: "Resumo" },
+    education: { emoji: "🎓", nome: "Educação" },
+    projects: { emoji: "🗂️", nome: "Projetos" },
+    professional_experience: { emoji: "🧑‍💻", nome: "Experiência Profissional" },
+    technical_skills: { emoji: "📏", nome: "Habilidades Técnicas" },
+    courses: { emoji: "📚", nome: "Cursos" },
+    final_review: { emoji: "🔚", nome: "Revisão Final" }
+  };
+  const secoes = Object.entries(raw.sections).map(([key, val]) => {
+    const meta = sectionMap[key] || { emoji: "📌", nome: key };
+    const statusArr = Array.isArray(val.status) ? val.status : [val.status];
+    const isOk = statusArr.includes("✅ Tudo certo") && statusArr.length === 1;
+    const warnings = statusArr.filter(s => s !== "✅ Tudo certo");
+    return {
+      emoji: meta.emoji,
+      nome: meta.nome,
+      status: isOk ? "ok" : "aviso",
+      status_texto: isOk ? "✅ Tudo certo" : warnings.join(" | "),
+      feedback: val.feedback
+    };
+  });
+  return { secoes, comentario_geral: raw.general_comments };
+}
+
+// Convert LinkedIn result (new schema) to normalized display format
+function normalizeLiResult(raw) {
+  const sectionMap = {
+    custom_url: { emoji: "🌐", nome: "URL Personalizada" },
+    headline: { emoji: "🔠", nome: "Título/Headline" },
+    contact_info: { emoji: "📲", nome: "Informações de Contato" },
+    summary: { emoji: "✍️", nome: "Resumo (Sobre)" },
+    experience: { emoji: "💼", nome: "Experiências" },
+    education: { emoji: "🎓", nome: "Formação Acadêmica" },
+    licenses_and_certificates: { emoji: "🎖️", nome: "Licenças e Certificados" },
+    volunteering: { emoji: "💟", nome: "Trabalho Voluntário" },
+    skills: { emoji: "⭐", nome: "Competências" },
+    projects_and_publications: { emoji: "🗂️", nome: "Projetos e Publicações" },
+    languages: { emoji: "🈵", nome: "Idiomas" }
+  };
+  const secoes = Object.entries(raw.sections).map(([key, val]) => {
+    const meta = sectionMap[key] || { emoji: "📌", nome: key };
+    const isOk = val.status === "✅ De acordo com as orientações";
+    return {
+      emoji: meta.emoji,
+      nome: meta.nome,
+      status: isOk ? "ok" : "aviso",
+      status_texto: val.status,
+      feedback: val.feedback
+    };
+  });
+  return { secoes, comentario_geral: raw.general_comments };
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -570,7 +683,8 @@ async function iniciarAnalise() {
           updateLogItem(i, "processing", "Lendo PDF...");
           const cvText = await extractPdfText(pdfFile);
           updateLogItem(i, "processing", "Analisando currículo...");
-          result.cvResult = await callClaude(CV_PROMPT, `Nome: ${nome}\n\n${cvText}`);
+          const rawCv = await callClaude(CV_PROMPT, `Nome do candidato: ${nome}\n\nCurrículo:\n${cvText}`);
+          result.cvResult = normalizeCvResult(rawCv);
         } else {
           result.error = (result.error || "") + "PDF não encontrado. ";
         }
@@ -582,7 +696,8 @@ async function iniciarAnalise() {
         const liData = await fetchLinkedInProfile(apifyKey, liLink);
         if (liData) {
           updateLogItem(i, "processing", "Analisando LinkedIn...");
-          result.liResult = await callClaude(LI_PROMPT, `Nome: ${nome}\n\n${JSON.stringify(liData, null, 2)}`);
+          const rawLi = await callClaude(LI_PROMPT, `Nome do candidato: ${nome}\n\nDados do perfil LinkedIn:\n${JSON.stringify(liData, null, 2)}`);
+          result.liResult = normalizeLiResult(rawLi);
         }
       }
 
