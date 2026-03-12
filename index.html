@@ -221,6 +221,11 @@
   <!-- LINKEDIN + MODO -->
   <div class="config-panel">
     <h2>LinkedIn & Configuração</h2>
+    <div class="field">
+      <label>Chave API Anthropic (Claude)</label>
+      <input type="password" id="anthropic-key" placeholder="sk-ant-...">
+      <p class="hint">// Necessária para análise com IA — fica salva só no seu navegador</p>
+    </div>
     <div class="row-2">
       <div class="field">
         <label>Chave API Apify (para LinkedIn)</label>
@@ -495,9 +500,11 @@ Critérios:
 Dados:\n`;
 
 async function callClaude(prompt, content) {
+  const anthropicKey = document.getElementById("anthropic-key").value.trim();
+  if (!anthropicKey) throw new Error("Informe a chave da API da Anthropic.");
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "x-api-key": anthropicKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: 1000,
@@ -525,6 +532,7 @@ async function iniciarAnalise() {
   errEl.classList.remove("show");
 
   if (!sheetsUrl) { errEl.textContent = "Informe o link da planilha."; errEl.classList.add("show"); return; }
+  if (!document.getElementById("anthropic-key").value.trim()) { errEl.textContent = "Informe a chave da API da Anthropic."; errEl.classList.add("show"); return; }
   if (modo !== "linkedin" && !Object.keys(uploadedPDFs).length) { errEl.textContent = "Faça upload dos PDFs dos currículos."; errEl.classList.add("show"); return; }
 
   const btn = document.querySelector(".btn-analyze");
