@@ -21,266 +21,123 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'Syne', sans-serif;
-    background: var(--black);
-    color: var(--text);
-    min-height: 100vh;
-  }
+  body { font-family: 'Syne', sans-serif; background: var(--black); color: var(--text); min-height: 100vh; }
 
   header {
-    border-bottom: 1px solid var(--border);
-    padding: 20px 40px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: var(--black);
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    border-bottom: 1px solid var(--border); padding: 20px 40px;
+    display: flex; align-items: center; gap: 14px;
+    background: var(--black); position: sticky; top: 0; z-index: 100;
   }
-
   .logo-mark {
-    width: 32px; height: 32px;
-    background: var(--yellow);
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    flex-shrink: 0;
+    width: 32px; height: 32px; background: var(--yellow);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); flex-shrink: 0;
   }
-
   header h1 { font-size: 14px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--yellow); }
   header span { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); margin-left: auto; }
 
   .main { max-width: 1000px; margin: 0 auto; padding: 36px 24px 80px; }
 
-  /* CONFIG PANEL */
-  .config-panel {
-    background: var(--dark);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 24px;
-    margin-bottom: 16px;
-  }
-
+  .config-panel { background: var(--dark); border: 1px solid var(--border); border-radius: 4px; padding: 24px; margin-bottom: 16px; }
   .config-panel h2 {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
-    text-transform: uppercase; color: var(--muted); margin-bottom: 18px;
-    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
   }
-
-  .config-panel h2::before {
-    content: ''; display: inline-block; width: 6px; height: 6px;
-    background: var(--yellow); border-radius: 50%;
-  }
+  .config-panel h2::before { content: ''; display: inline-block; width: 6px; height: 6px; background: var(--yellow); border-radius: 50%; }
 
   .field { margin-bottom: 14px; }
-
   label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 5px; letter-spacing: 0.05em; text-transform: uppercase; }
-
   input[type="text"], input[type="password"], input[type="url"], select {
     width: 100%; background: var(--mid); border: 1px solid var(--border);
     border-radius: 3px; color: var(--text); font-family: 'Space Mono', monospace;
     font-size: 13px; padding: 10px 14px; outline: none; transition: border-color 0.2s;
   }
-
   input:focus, select:focus { border-color: var(--yellow); }
-  select { cursor: pointer; }
-
   .hint { font-size: 11px; color: var(--muted); margin-top: 5px; font-family: 'Space Mono', monospace; }
-
   .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
 
-  /* COLUMN MAPPER */
-  .col-mapper {
-    background: var(--mid);
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    padding: 16px;
-    margin-top: 8px;
+  /* PDF DROP ZONE */
+  .drop-zone {
+    border: 2px dashed var(--border); border-radius: 4px; padding: 32px;
+    text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    position: relative;
   }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: var(--yellow); background: rgba(212,224,0,0.03); }
+  .drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .drop-zone-icon { font-size: 28px; margin-bottom: 10px; }
+  .drop-zone-text { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .drop-zone-sub { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); }
 
-  .col-mapper p {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    margin-bottom: 12px;
+  .pdf-list { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
+  .pdf-item {
+    background: var(--mid); border: 1px solid var(--border); border-radius: 3px;
+    padding: 8px 12px; display: flex; align-items: center; gap: 10px;
+    font-family: 'Space Mono', monospace; font-size: 12px;
   }
+  .pdf-item .pdf-name { flex: 1; color: var(--text); }
+  .pdf-item .pdf-size { color: var(--muted); font-size: 10px; }
+  .pdf-item .pdf-match { font-size: 11px; }
+  .pdf-item.matched .pdf-match { color: var(--ok); }
+  .pdf-item.unmatched .pdf-match { color: var(--error); }
 
-  /* ANALYZE BUTTON */
   .btn-analyze {
-    width: 100%; background: var(--yellow); color: var(--black);
-    border: none; border-radius: 3px; font-family: 'Syne', sans-serif;
-    font-weight: 800; font-size: 14px; letter-spacing: 0.1em;
-    text-transform: uppercase; padding: 16px; cursor: pointer;
-    transition: opacity 0.2s, transform 0.1s; margin-top: 8px;
+    width: 100%; background: var(--yellow); color: var(--black); border: none; border-radius: 3px;
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 16px; cursor: pointer; transition: opacity 0.2s; margin-top: 8px;
   }
-
   .btn-analyze:hover { opacity: 0.9; }
-  .btn-analyze:active { transform: scale(0.99); }
   .btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  /* PROGRESS */
-  .progress-panel {
-    display: none;
-    background: var(--dark);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 24px;
-    margin-top: 20px;
-  }
-
+  .progress-panel { display: none; background: var(--dark); border: 1px solid var(--border); border-radius: 4px; padding: 24px; margin-top: 20px; }
   .progress-panel.show { display: block; }
-
-  .progress-header {
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
-  }
-
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
   .progress-header h3 { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--yellow); }
-
   .progress-bar-wrap { background: var(--border); border-radius: 2px; height: 4px; margin-bottom: 20px; overflow: hidden; }
-
   .progress-bar { height: 100%; background: var(--yellow); border-radius: 2px; transition: width 0.4s; width: 0%; }
 
-  /* CANDIDATE LOG */
   .candidate-log { display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto; }
-
-  .log-item {
-    background: var(--mid);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--border);
-    border-radius: 3px;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
+  .log-item { background: var(--mid); border: 1px solid var(--border); border-left: 3px solid var(--border); border-radius: 3px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
   .log-item.processing { border-left-color: var(--blue); }
-  .log-item.done-cv { border-left-color: var(--warn); }
   .log-item.done { border-left-color: var(--ok); }
   .log-item.error { border-left-color: var(--error); }
-
   .log-name { font-size: 13px; font-weight: 600; flex: 1; }
-
-  .log-status {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-  }
-
+  .log-status { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); }
   .log-item.processing .log-status { color: var(--blue); }
   .log-item.done .log-status { color: var(--ok); }
-  .log-item.done-cv .log-status { color: var(--warn); }
   .log-item.error .log-status { color: var(--error); }
-
-  .spinner-sm {
-    width: 14px; height: 14px;
-    border: 2px solid var(--border);
-    border-top-color: var(--blue);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    flex-shrink: 0;
-  }
-
+  .spinner-sm { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* RESULTS TABLE */
-  .results-panel {
-    display: none;
-    margin-top: 24px;
-  }
-
+  .results-panel { display: none; margin-top: 24px; }
   .results-panel.show { display: block; }
-
-  .results-top {
-    display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
-  }
-
+  .results-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
   .results-top h3 { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--yellow); }
-
-  .btn-export {
-    font-family: 'Space Mono', monospace; font-size: 11px;
-    background: none; border: 1px solid var(--border); color: var(--text);
-    padding: 8px 14px; border-radius: 3px; cursor: pointer; transition: border-color 0.2s;
-  }
-
+  .btn-export { font-family: 'Space Mono', monospace; font-size: 11px; background: none; border: 1px solid var(--border); color: var(--text); padding: 8px 14px; border-radius: 3px; cursor: pointer; transition: border-color 0.2s; }
   .btn-export:hover { border-color: var(--yellow); color: var(--yellow); }
 
-  /* CANDIDATE CARDS */
   .cards { display: flex; flex-direction: column; gap: 16px; }
-
-  .card {
-    background: var(--dark);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  .card-header {
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    user-select: none;
-    border-bottom: 1px solid transparent;
-    transition: background 0.15s;
-  }
-
+  .card { background: var(--dark); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+  .card-header { padding: 16px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; border-bottom: 1px solid transparent; transition: background 0.15s; }
   .card-header:hover { background: var(--mid); }
   .card-header.open { border-bottom-color: var(--border); }
-
   .card-name { font-size: 15px; font-weight: 700; flex: 1; }
-
   .card-scores { display: flex; gap: 8px; }
-
-  .score-badge {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 2px;
-    background: var(--mid);
-    border: 1px solid var(--border);
-  }
-
+  .score-badge { font-family: 'Space Mono', monospace; font-size: 11px; padding: 3px 10px; border-radius: 2px; background: var(--mid); border: 1px solid var(--border); }
   .score-badge.cv { border-color: var(--warn); color: var(--warn); }
   .score-badge.li { border-color: var(--blue); color: var(--blue); }
-
   .card-toggle { font-size: 12px; color: var(--muted); }
-
   .card-body { display: none; padding: 20px; }
   .card-body.open { display: block; }
 
   .section-tabs { display: flex; gap: 4px; margin-bottom: 16px; }
-
-  .stab {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    background: var(--mid);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    padding: 6px 12px;
-    border-radius: 2px;
-    cursor: pointer;
-  }
-
+  .stab { font-family: 'Space Mono', monospace; font-size: 11px; background: var(--mid); border: 1px solid var(--border); color: var(--muted); padding: 6px 12px; border-radius: 2px; cursor: pointer; }
   .stab.active { background: var(--border); color: var(--text); border-color: var(--yellow); }
 
   .criteria-list { display: flex; flex-direction: column; gap: 8px; }
-
-  .crit {
-    background: var(--mid);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--border);
-    border-radius: 3px;
-    padding: 12px 16px;
-  }
-
+  .crit { background: var(--mid); border: 1px solid var(--border); border-left: 3px solid var(--border); border-radius: 3px; padding: 12px 16px; }
   .crit.ok { border-left-color: var(--ok); }
   .crit.aviso { border-left-color: var(--warn); }
   .crit.erro { border-left-color: var(--error); }
-
   .crit-top { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
   .crit-name { font-size: 13px; font-weight: 600; flex: 1; }
   .crit-st { font-family: 'Space Mono', monospace; font-size: 11px; }
@@ -289,37 +146,19 @@
   .crit.erro .crit-st { color: var(--error); }
   .crit-fb { font-family: 'Space Mono', monospace; font-size: 12px; color: #999; line-height: 1.6; }
 
-  .general-box {
-    background: var(--black);
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    padding: 14px 16px;
-    margin-top: 12px;
-  }
-
+  .general-box { background: var(--black); border: 1px solid var(--border); border-radius: 3px; padding: 14px 16px; margin-top: 12px; }
   .general-box h4 { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
   .general-box p { font-family: 'Space Mono', monospace; font-size: 12px; line-height: 1.7; color: var(--text); }
 
-  .error-msg {
-    background: rgba(255,77,77,0.08); border: 1px solid rgba(255,77,77,0.3);
-    border-radius: 3px; padding: 12px 16px;
-    font-family: 'Space Mono', monospace; font-size: 12px; color: var(--error);
-    margin-top: 16px; display: none;
-  }
-
+  .error-msg { background: rgba(255,77,77,0.08); border: 1px solid rgba(255,77,77,0.3); border-radius: 3px; padding: 12px 16px; font-family: 'Space Mono', monospace; font-size: 12px; color: var(--error); margin-top: 16px; display: none; }
   .error-msg.show { display: block; }
 
-  .info-box {
-    background: rgba(77,166,255,0.06);
-    border: 1px solid rgba(77,166,255,0.2);
-    border-radius: 3px;
-    padding: 12px 16px;
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    color: var(--blue);
-    margin-bottom: 16px;
-    line-height: 1.6;
-  }
+  .info-box { background: rgba(77,166,255,0.06); border: 1px solid rgba(77,166,255,0.2); border-radius: 3px; padding: 12px 16px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--blue); margin-bottom: 16px; line-height: 1.8; }
+
+  .match-summary { display: flex; gap: 12px; margin-top: 12px; }
+  .match-badge { font-family: 'Space Mono', monospace; font-size: 11px; padding: 4px 10px; border-radius: 2px; }
+  .match-badge.ok { background: rgba(124,255,107,0.1); color: var(--ok); border: 1px solid rgba(124,255,107,0.3); }
+  .match-badge.warn { background: rgba(255,184,0,0.1); color: var(--warn); border: 1px solid rgba(255,184,0,0.3); }
 
   @media (max-width: 600px) {
     .row-2, .row-3 { grid-template-columns: 1fr; }
@@ -339,17 +178,54 @@
 <div class="main">
 
   <div class="info-box">
-    // Antes de usar: (1) Crie conta em apify.com e obtenha seu API token em Settings → Integrations → API token &nbsp;|&nbsp; (2) Deixe sua Google Sheets pública: Compartilhar → "Qualquer pessoa com o link pode ver"
+    📋 <strong>Como usar:</strong> (1) Cole o link da sua planilha pública do Google Sheets &nbsp;|&nbsp; (2) Baixe todos os PDFs do Google Drive e faça upload aqui &nbsp;|&nbsp; (3) Cole a chave do Apify para analisar LinkedIn &nbsp;|&nbsp; (4) Clique em Iniciar
   </div>
 
-  <!-- CONFIGURAÇÃO -->
+  <!-- PLANILHA -->
   <div class="config-panel">
-    <h2>Configuração</h2>
+    <h2>Google Sheets</h2>
+    <div class="field">
+      <label>Link da Planilha (pública)</label>
+      <input type="url" id="sheets-url" placeholder="https://docs.google.com/spreadsheets/d/XXXX/edit">
+    </div>
+    <div class="row-3">
+      <div class="field">
+        <label>Coluna — Nome</label>
+        <input type="text" id="col-nome" value="Nome">
+      </div>
+      <div class="field">
+        <label>Coluna — Link LinkedIn</label>
+        <input type="text" id="col-li" value="Link LinkedIn">
+      </div>
+      <div class="field">
+        <label>Aba da planilha</label>
+        <input type="text" id="sheet-name" value="Respostas do formulário 1">
+      </div>
+    </div>
+  </div>
+
+  <!-- PDFs -->
+  <div class="config-panel">
+    <h2>Currículos em PDF</h2>
+    <p class="hint" style="margin-bottom:12px">// Baixe todos os PDFs do Google Drive → selecione todos aqui de uma vez (Ctrl+A na pasta)</p>
+    <div class="drop-zone" id="drop-zone">
+      <input type="file" id="pdf-input" accept=".pdf" multiple>
+      <div class="drop-zone-icon">📂</div>
+      <div class="drop-zone-text">Clique ou arraste os PDFs aqui</div>
+      <div class="drop-zone-sub">// Selecione múltiplos arquivos de uma vez</div>
+    </div>
+    <div class="pdf-list" id="pdf-list"></div>
+    <div class="match-summary" id="match-summary" style="display:none"></div>
+  </div>
+
+  <!-- LINKEDIN + MODO -->
+  <div class="config-panel">
+    <h2>LinkedIn & Configuração</h2>
     <div class="row-2">
       <div class="field">
-        <label>Chave API Apify</label>
-        <input type="password" id="apify-key" placeholder="apify_api_XXXXXXXX">
-        <p class="hint">// Settings → Integrations → API token no apify.com</p>
+        <label>Chave API Apify (para LinkedIn)</label>
+        <input type="password" id="apify-key" placeholder="apify_api_XXXXXXXX (opcional)">
+        <p class="hint">// Deixe vazio para analisar só currículos</p>
       </div>
       <div class="field">
         <label>Modo de análise</label>
@@ -362,51 +238,20 @@
     </div>
   </div>
 
-  <!-- GOOGLE SHEETS -->
-  <div class="config-panel">
-    <h2>Google Sheets</h2>
-    <div class="field">
-      <label>Link da Planilha (pública)</label>
-      <input type="url" id="sheets-url" placeholder="https://docs.google.com/spreadsheets/d/XXXX/edit">
-      <p class="hint">// A planilha precisa estar com acesso "Qualquer pessoa com o link pode ver"</p>
-    </div>
-    <div class="row-3">
-      <div class="field">
-        <label>Coluna — Nome</label>
-        <input type="text" id="col-nome" placeholder="Ex: A ou Nome" value="Nome">
-      </div>
-      <div class="field">
-        <label>Coluna — Link CV (PDF)</label>
-        <input type="text" id="col-cv" placeholder="Ex: B ou Currículo" value="Currículo">
-      </div>
-      <div class="field">
-        <label>Coluna — Link LinkedIn</label>
-        <input type="text" id="col-li" placeholder="Ex: C ou LinkedIn" value="Link LinkedIn">
-      </div>
-    </div>
-    <div class="field">
-      <label>Aba da planilha (nome exato)</label>
-      <input type="text" id="sheet-name" placeholder="Ex: Respostas do formulário 1" value="Respostas do formulário 1">
-    </div>
-  </div>
-
   <button class="btn-analyze" onclick="iniciarAnalise()">⚡ Iniciar Análise em Lote</button>
-
   <div class="error-msg" id="global-error"></div>
 
-  <!-- PROGRESS -->
+  <!-- PROGRESSO -->
   <div class="progress-panel" id="progress-panel">
     <div class="progress-header">
       <h3>// Processando candidatos</h3>
       <span id="progress-count" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">0 / 0</span>
     </div>
-    <div class="progress-bar-wrap">
-      <div class="progress-bar" id="progress-bar"></div>
-    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
     <div class="candidate-log" id="candidate-log"></div>
   </div>
 
-  <!-- RESULTS -->
+  <!-- RESULTADOS -->
   <div class="results-panel" id="results-panel">
     <div class="results-top">
       <h3>// Resultados — <span id="total-count"></span></h3>
@@ -418,7 +263,103 @@
 </div>
 
 <script>
+let uploadedPDFs = {}; // filename -> File
+let sheetRows = [];
 let allResults = [];
+
+// ─── PDF UPLOAD ───────────────────────────────────────────────────
+const dropZone = document.getElementById("drop-zone");
+const pdfInput = document.getElementById("pdf-input");
+
+pdfInput.addEventListener("change", e => handleFiles(e.target.files));
+dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("drag-over"); });
+dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+dropZone.addEventListener("drop", e => { e.preventDefault(); dropZone.classList.remove("drag-over"); handleFiles(e.dataTransfer.files); });
+
+function handleFiles(files) {
+  for (const file of files) {
+    if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
+      uploadedPDFs[file.name] = file;
+    }
+  }
+  renderPdfList();
+}
+
+function normalizeName(name) {
+  return name.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, "")
+    .trim();
+}
+
+function findPdfForCandidate(candidateName) {
+  const norm = normalizeName(candidateName);
+  // Try to find a PDF whose filename contains the candidate's name (or vice versa)
+  for (const [filename, file] of Object.entries(uploadedPDFs)) {
+    const fileNorm = normalizeName(filename.replace(".pdf", ""));
+    // Check if filename contains any part of the name
+    const nameParts = norm.split(" ").filter(p => p.length > 2);
+    const matches = nameParts.filter(part => fileNorm.includes(part));
+    if (matches.length >= 2 || fileNorm.includes(norm) || norm.includes(fileNorm)) {
+      return file;
+    }
+  }
+  return null;
+}
+
+function renderPdfList() {
+  const list = document.getElementById("pdf-list");
+  const summary = document.getElementById("match-summary");
+  list.innerHTML = "";
+
+  const files = Object.values(uploadedPDFs);
+  if (!files.length) { summary.style.display = "none"; return; }
+
+  let matched = 0, unmatched = 0;
+
+  files.forEach(file => {
+    const candidateMatch = sheetRows.length ? findCandidateForFile(file.name) : null;
+    const isMatched = sheetRows.length ? !!candidateMatch : null;
+    if (isMatched === true) matched++;
+    if (isMatched === false) unmatched++;
+
+    const div = document.createElement("div");
+    div.className = `pdf-item ${isMatched === true ? "matched" : isMatched === false ? "unmatched" : ""}`;
+    div.innerHTML = `
+      <span>📄</span>
+      <span class="pdf-name">${file.name}</span>
+      <span class="pdf-size">${(file.size / 1024).toFixed(0)}kb</span>
+      ${isMatched !== null ? `<span class="pdf-match">${isMatched ? "✓ " + candidateMatch : "✗ sem match"}</span>` : ""}
+    `;
+    list.appendChild(div);
+  });
+
+  if (sheetRows.length) {
+    summary.style.display = "flex";
+    summary.innerHTML = `
+      <span class="match-badge ok">✓ ${matched} com match</span>
+      ${unmatched ? `<span class="match-badge warn">✗ ${unmatched} sem match</span>` : ""}
+    `;
+  } else {
+    summary.style.display = "none";
+  }
+}
+
+function findCandidateForFile(filename) {
+  const fileNorm = normalizeName(filename.replace(".pdf", ""));
+  for (const row of sheetRows) {
+    const colNome = document.getElementById("col-nome").value.trim();
+    const name = getColValue(row, colNome);
+    if (!name) continue;
+    const norm = normalizeName(name);
+    const nameParts = norm.split(" ").filter(p => p.length > 2);
+    const matches = nameParts.filter(part => fileNorm.includes(part));
+    if (matches.length >= 2 || fileNorm.includes(norm) || norm.includes(fileNorm)) {
+      return name;
+    }
+  }
+  return null;
+}
 
 // ─── SHEET PARSING ────────────────────────────────────────────────
 function extractSheetId(url) {
@@ -429,157 +370,132 @@ function extractSheetId(url) {
 async function fetchSheetData(url, sheetName) {
   const id = extractSheetId(url);
   if (!id) throw new Error("Link da planilha inválido.");
-
   const encoded = encodeURIComponent(sheetName);
   const csvUrl = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=${encoded}`;
-
   const res = await fetch(csvUrl);
-  if (!res.ok) throw new Error("Não foi possível acessar a planilha. Verifique se ela está pública.");
-
-  const text = await res.text();
-  return parseCSV(text);
+  if (!res.ok) throw new Error("Não foi possível acessar a planilha. Verifique se está pública.");
+  return parseCSV(await res.text());
 }
 
 function parseCSV(text) {
   const lines = text.trim().split("\n");
   if (lines.length < 2) throw new Error("Planilha sem dados.");
-
   const headers = parseCSVLine(lines[0]);
-  const rows = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const vals = parseCSVLine(lines[i]);
+  return lines.slice(1).map(line => {
+    const vals = parseCSVLine(line);
     const row = {};
-    headers.forEach((h, idx) => { row[h.trim()] = (vals[idx] || "").trim(); });
-    rows.push(row);
-  }
-
-  return rows;
+    headers.forEach((h, i) => { row[h.trim()] = (vals[i] || "").trim(); });
+    return row;
+  });
 }
 
 function parseCSVLine(line) {
-  const result = [];
-  let current = "";
-  let inQuotes = false;
-
+  const result = []; let current = ""; let inQuotes = false;
   for (let i = 0; i < line.length; i++) {
     const ch = line[i];
-    if (ch === '"') {
-      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
-      else inQuotes = !inQuotes;
-    } else if (ch === ',' && !inQuotes) {
-      result.push(current);
-      current = "";
-    } else {
-      current += ch;
-    }
+    if (ch === '"') { if (inQuotes && line[i+1] === '"') { current += '"'; i++; } else inQuotes = !inQuotes; }
+    else if (ch === ',' && !inQuotes) { result.push(current); current = ""; }
+    else current += ch;
   }
   result.push(current);
   return result;
 }
 
+function getColValue(row, colName) {
+  if (!colName) return "";
+  if (row[colName] !== undefined) return row[colName];
+  const lower = colName.toLowerCase();
+  const key = Object.keys(row).find(k => k.toLowerCase().includes(lower));
+  return key ? row[key] : "";
+}
+
+// ─── PDF TEXT EXTRACTION ──────────────────────────────────────────
+async function extractPdfText(file) {
+  const buffer = await file.arrayBuffer();
+  if (!window.pdfjsLib) throw new Error("PDF.js não carregado.");
+  const pdf = await window.pdfjsLib.getDocument({ data: buffer }).promise;
+  let text = "";
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(item => item.str).join(" ") + "\n";
+  }
+  return text;
+}
+
 // ─── APIFY ────────────────────────────────────────────────────────
 async function fetchLinkedInProfile(apiKey, linkedinUrl) {
-  // Start actor run
   const startRes = await fetch("https://api.apify.com/v2/acts/2SyF0bVxmgGr8IVCZ/runs?token=" + apiKey, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      profileUrls: [linkedinUrl],
-      proxy: { useApifyProxy: true }
-    })
+    body: JSON.stringify({ profileUrls: [linkedinUrl], proxy: { useApifyProxy: true } })
   });
-
   if (!startRes.ok) throw new Error("Erro ao iniciar Apify. Verifique sua chave.");
-  const startData = await startRes.json();
-  const runId = startData.data.id;
-
-  // Poll for completion
-  for (let attempt = 0; attempt < 30; attempt++) {
+  const runId = (await startRes.json()).data.id;
+  for (let i = 0; i < 30; i++) {
     await sleep(4000);
-    const statusRes = await fetch(`https://api.apify.com/v2/actor-runs/${runId}?token=${apiKey}`);
-    const statusData = await statusRes.json();
-    const status = statusData.data.status;
-
-    if (status === "SUCCEEDED") {
-      const datasetId = statusData.data.defaultDatasetId;
-      const itemsRes = await fetch(`https://api.apify.com/v2/datasets/${datasetId}/items?token=${apiKey}`);
-      const items = await itemsRes.json();
+    const s = await (await fetch(`https://api.apify.com/v2/actor-runs/${runId}?token=${apiKey}`)).json();
+    if (s.data.status === "SUCCEEDED") {
+      const items = await (await fetch(`https://api.apify.com/v2/datasets/${s.data.defaultDatasetId}/items?token=${apiKey}`)).json();
       return items[0] || null;
     }
-
-    if (status === "FAILED" || status === "ABORTED") throw new Error("Apify falhou ao buscar o perfil.");
+    if (s.data.status === "FAILED" || s.data.status === "ABORTED") throw new Error("Apify falhou.");
   }
-
   throw new Error("Timeout ao buscar perfil LinkedIn.");
 }
 
 // ─── CLAUDE API ───────────────────────────────────────────────────
-const CV_PROMPT = `Você é um especialista em empregabilidade do programa "Programadores do Amanhã" (PdA). Analise o currículo abaixo com base nos critérios do guia oficial.
+const CV_PROMPT = `Você é um especialista em empregabilidade do programa "Programadores do Amanhã" (PdA). Analise o currículo abaixo.
 
 Retorne APENAS um JSON válido, sem texto antes ou depois:
 {
   "secoes": [
-    {
-      "emoji": "emoji",
-      "nome": "nome da seção",
-      "status": "ok" | "aviso" | "erro",
-      "status_texto": "✅ Tudo certo" | "⚠️ Precisa ajustar" | "❌ Ausente ou incorreto",
-      "feedback": "feedback detalhado"
-    }
+    { "emoji": "emoji", "nome": "nome", "status": "ok|aviso|erro", "status_texto": "✅ Tudo certo|⚠️ Precisa ajustar|❌ Ausente ou incorreto", "feedback": "feedback" }
   ],
-  "comentario_geral": "comentário geral"
-}
-
-Critérios (uma seção por item):
-1. 📋 Cabeçalho — Nome completo, celular, email, cidade/estado, link LinkedIn, link GitHub
-2. 🎯 Objetivo — Frase "Atuar como [cargo]" presente e específica
-3. 🤏 Resumo — 3 a 5 linhas, 3ª pessoa, com conquistas, interesses e metas
-4. 🎓 Educação — Formação PdA (720h, tecnologias, atividades), ensino médio, ordem cronológica inversa
-5. 🗂️ Projetos — Descrição, resultados, link de acesso e tecnologias destacadas
-6. 🧑‍💻 Experiência Profissional — Cargo, empresa, duração e descrição com resultados
-7. 📏 Habilidades Técnicas — Lista de hard skills e nível de idiomas
-8. 📚 Cursos — Cursos rápidos com carga horária
-9. 🔚 Conferência Final — Português correto, sem gírias, máximo 2 páginas, ATS-friendly
-
-Currículo:
-`;
-
-const LI_PROMPT = `Você é um especialista em empregabilidade do programa "Programadores do Amanhã" (PdA). Analise o perfil do LinkedIn abaixo.
-
-Retorne APENAS um JSON válido, sem texto antes ou depois:
-{
-  "secoes": [
-    {
-      "emoji": "emoji",
-      "nome": "nome da seção",
-      "status": "ok" | "aviso" | "erro",
-      "status_texto": "✅ Tudo certo" | "⚠️ Precisa ajustar" | "❌ Ausente ou incorreto",
-      "feedback": "feedback detalhado"
-    }
-  ],
-  "comentario_geral": "comentário geral"
+  "comentario_geral": "comentário"
 }
 
 Critérios:
-1. 📷 Foto de Perfil — Presente, rosto centralizado, fundo neutro, aparência profissional
-2. 🌇 Capa — Presente, profissional (Canva ou modelo PdA)
-3. 🔠 Título/Headline — Cargo + palavras-chave separadas por barras
-4. 📲 Informações de Contato — Email e telefone visíveis
-5. ✍️ Resumo (Sobre) — Completo com hard/soft skills, conquistas e metas
-6. 💼 Experiências Profissionais — Cargos com resultados descritos
-7. 🎓 Formação Acadêmica — Formação PdA no formato correto (720h, tecnologias, atividades)
-8. 🎖️ Licenças e Certificados — Cursos com carga horária
-9. ⭐ Competências — Habilidades técnicas e interpessoais listadas
-10. 🗂️ Projetos — Projetos com link GitHub e descrição
-11. 🈵 Idiomas — Nível de inglês informado
-12. 🌐 URL Personalizada — Sem números aleatórios, personalizada
+1. 📋 Cabeçalho — Nome, celular, email, cidade/estado, LinkedIn, GitHub
+2. 🎯 Objetivo — "Atuar como [cargo]" presente e específico
+3. 🤏 Resumo — 3-5 linhas, 3ª pessoa, conquistas e metas
+4. 🎓 Educação — Formação PdA (720h, tecnologias, atividades), ensino médio, ordem cronológica inversa
+5. 🗂️ Projetos — Descrição, resultados, link e tecnologias
+6. 🧑‍💻 Experiência — Cargo, empresa, duração, resultados
+7. 📏 Habilidades Técnicas — Hard skills e nível de idiomas
+8. 📚 Cursos — Cursos rápidos com carga horária
+9. 🔚 Conferência Final — Português correto, máx 2 páginas, ATS-friendly
 
-Dados do perfil LinkedIn:
-`;
+Currículo:\n`;
+
+const LI_PROMPT = `Você é um especialista em empregabilidade do programa "Programadores do Amanhã" (PdA). Analise o perfil LinkedIn abaixo.
+
+Retorne APENAS um JSON válido, sem texto antes ou depois:
+{
+  "secoes": [
+    { "emoji": "emoji", "nome": "nome", "status": "ok|aviso|erro", "status_texto": "✅ Tudo certo|⚠️ Precisa ajustar|❌ Ausente ou incorreto", "feedback": "feedback" }
+  ],
+  "comentario_geral": "comentário"
+}
+
+Critérios:
+1. 📷 Foto — Presente, profissional, fundo neutro
+2. 🌇 Capa — Presente, profissional
+3. 🔠 Título — Cargo + palavras-chave separadas por barras
+4. 📲 Contato — Email e telefone visíveis
+5. ✍️ Resumo — Completo com skills, conquistas e metas
+6. 💼 Experiências — Cargos com resultados descritos
+7. 🎓 Formação — PdA no formato correto (720h, tecnologias)
+8. 🎖️ Certificados — Cursos com carga horária
+9. ⭐ Competências — Hard e soft skills listadas
+10. 🗂️ Projetos — Com link GitHub e descrição
+11. 🈵 Idiomas — Nível de inglês informado
+12. 🌐 URL — Personalizada, sem números aleatórios
+
+Dados:\n`;
 
 async function callClaude(prompt, content) {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -588,52 +504,108 @@ async function callClaude(prompt, content) {
       messages: [{ role: "user", content: prompt + content }]
     })
   });
-
-  if (!response.ok) throw new Error(`Erro Claude API: ${response.status}`);
-  const data = await response.json();
+  if (!res.ok) throw new Error(`Erro Claude API: ${res.status}`);
+  const data = await res.json();
   const text = data.content.map(i => i.text || "").join("");
   return JSON.parse(text.replace(/```json|```/g, "").trim());
 }
 
-// ─── PDF TEXT EXTRACTION ──────────────────────────────────────────
-async function extractPdfText(url) {
-  // Convert Google Drive view URL to direct download
-  let directUrl = url;
-  const driveMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-  if (driveMatch) {
-    directUrl = `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`;
-  }
-
-  const res = await fetch(directUrl);
-  if (!res.ok) throw new Error("Não foi possível baixar o PDF. Verifique se está público.");
-
-  const buffer = await res.arrayBuffer();
-
-  // Use PDF.js via CDN
-  if (!window.pdfjsLib) throw new Error("PDF.js não carregado.");
-
-  const pdf = await window.pdfjsLib.getDocument({ data: buffer }).promise;
-  let text = "";
-
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    text += content.items.map(item => item.str).join(" ") + "\n";
-  }
-
-  return text;
-}
-
-// ─── MAIN FLOW ────────────────────────────────────────────────────
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-function getColValue(row, colName) {
-  if (!colName) return "";
-  // Try exact match first, then case-insensitive
-  if (row[colName] !== undefined) return row[colName];
-  const lower = colName.toLowerCase();
-  const key = Object.keys(row).find(k => k.toLowerCase().includes(lower));
-  return key ? row[key] : "";
+// ─── MAIN FLOW ────────────────────────────────────────────────────
+async function iniciarAnalise() {
+  const sheetsUrl = document.getElementById("sheets-url").value.trim();
+  const sheetName = document.getElementById("sheet-name").value.trim();
+  const colNome = document.getElementById("col-nome").value.trim();
+  const colLi = document.getElementById("col-li").value.trim();
+  const apifyKey = document.getElementById("apify-key").value.trim();
+  const modo = document.getElementById("modo").value;
+
+  const errEl = document.getElementById("global-error");
+  errEl.classList.remove("show");
+
+  if (!sheetsUrl) { errEl.textContent = "Informe o link da planilha."; errEl.classList.add("show"); return; }
+  if (modo !== "linkedin" && !Object.keys(uploadedPDFs).length) { errEl.textContent = "Faça upload dos PDFs dos currículos."; errEl.classList.add("show"); return; }
+
+  const btn = document.querySelector(".btn-analyze");
+  btn.disabled = true;
+  allResults = [];
+  document.getElementById("progress-panel").classList.add("show");
+  document.getElementById("results-panel").classList.remove("show");
+  document.getElementById("candidate-log").innerHTML = "";
+
+  try {
+    sheetRows = await fetchSheetData(sheetsUrl, sheetName);
+  } catch (e) {
+    errEl.textContent = e.message; errEl.classList.add("show"); btn.disabled = false; return;
+  }
+
+  const rows = sheetRows.filter(r => getColValue(r, colNome));
+  if (!rows.length) { errEl.textContent = "Nenhum candidato encontrado. Verifique os nomes das colunas."; errEl.classList.add("show"); btn.disabled = false; return; }
+
+  document.getElementById("progress-count").textContent = `0 / ${rows.length}`;
+  renderPdfList(); // re-render with match info now that we have rows
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const nome = getColValue(row, colNome);
+    const liLink = getColValue(row, colLi);
+
+    addLogItem(i, nome);
+    const result = { nome, liLink, cvResult: null, liResult: null, error: null };
+
+    try {
+      // CURRÍCULO
+      if (modo !== "linkedin") {
+        const pdfFile = findPdfForCandidate(nome);
+        if (pdfFile) {
+          updateLogItem(i, "processing", "Lendo PDF...");
+          const cvText = await extractPdfText(pdfFile);
+          updateLogItem(i, "processing", "Analisando currículo...");
+          result.cvResult = await callClaude(CV_PROMPT, `Nome: ${nome}\n\n${cvText}`);
+        } else {
+          result.error = (result.error || "") + "PDF não encontrado. ";
+        }
+      }
+
+      // LINKEDIN
+      if (modo !== "curriculo" && liLink && apifyKey) {
+        updateLogItem(i, "processing", "Buscando LinkedIn...");
+        const liData = await fetchLinkedInProfile(apifyKey, liLink);
+        if (liData) {
+          updateLogItem(i, "processing", "Analisando LinkedIn...");
+          result.liResult = await callClaude(LI_PROMPT, `Nome: ${nome}\n\n${JSON.stringify(liData, null, 2)}`);
+        }
+      }
+
+      updateLogItem(i, result.error ? "error" : "done", result.error ? `⚠ ${result.error.trim()}` : "✓ Concluído");
+
+    } catch (e) {
+      result.error = e.message;
+      updateLogItem(i, "error", `✗ ${e.message.slice(0, 60)}`);
+    }
+
+    allResults.push(result);
+    const pct = Math.round(((i + 1) / rows.length) * 100);
+    document.getElementById("progress-bar").style.width = pct + "%";
+    document.getElementById("progress-count").textContent = `${i + 1} / ${rows.length}`;
+
+    if (i < rows.length - 1) await sleep(2000);
+  }
+
+  renderCards();
+  document.getElementById("results-panel").classList.add("show");
+  document.getElementById("total-count").textContent = `${allResults.length} candidatos`;
+  btn.disabled = false;
+}
+
+function addLogItem(id, name) {
+  const log = document.getElementById("candidate-log");
+  const div = document.createElement("div");
+  div.className = "log-item processing"; div.id = `log-${id}`;
+  div.innerHTML = `<div class="spinner-sm"></div><span class="log-name">${name}</span><span class="log-status">Iniciando...</span>`;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
 }
 
 function updateLogItem(id, status, statusText) {
@@ -645,127 +617,15 @@ function updateLogItem(id, status, statusText) {
   if (spinner && status !== "processing") spinner.remove();
 }
 
-function addLogItem(id, name) {
-  const log = document.getElementById("candidate-log");
-  const div = document.createElement("div");
-  div.className = "log-item processing";
-  div.id = `log-${id}`;
-  div.innerHTML = `
-    <div class="spinner-sm"></div>
-    <span class="log-name">${name}</span>
-    <span class="log-status">Iniciando...</span>
-  `;
-  log.appendChild(div);
-}
-
-async function iniciarAnalise() {
-  const apifyKey = document.getElementById("apify-key").value.trim();
-  const sheetsUrl = document.getElementById("sheets-url").value.trim();
-  const sheetName = document.getElementById("sheet-name").value.trim();
-  const colNome = document.getElementById("col-nome").value.trim();
-  const colCv = document.getElementById("col-cv").value.trim();
-  const colLi = document.getElementById("col-li").value.trim();
-  const modo = document.getElementById("modo").value;
-
-  const errEl = document.getElementById("global-error");
-  errEl.classList.remove("show");
-
-  if (!sheetsUrl) { errEl.textContent = "Informe o link da planilha."; errEl.classList.add("show"); return; }
-  if (modo !== "curriculo" && !apifyKey) { errEl.textContent = "Informe a chave da API do Apify para analisar LinkedIn."; errEl.classList.add("show"); return; }
-
-  const btn = document.querySelector(".btn-analyze");
-  btn.disabled = true;
-
-  document.getElementById("progress-panel").classList.add("show");
-  document.getElementById("results-panel").classList.remove("show");
-  document.getElementById("candidate-log").innerHTML = "";
-  allResults = [];
-
-  let rows;
-  try {
-    rows = await fetchSheetData(sheetsUrl, sheetName);
-  } catch (e) {
-    errEl.textContent = e.message;
-    errEl.classList.add("show");
-    btn.disabled = false;
-    return;
-  }
-
-  // Filter rows with name
-  rows = rows.filter(r => getColValue(r, colNome));
-
-  if (rows.length === 0) {
-    errEl.textContent = "Nenhum candidato encontrado na planilha. Verifique os nomes das colunas.";
-    errEl.classList.add("show");
-    btn.disabled = false;
-    return;
-  }
-
-  document.getElementById("progress-count").textContent = `0 / ${rows.length}`;
-
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    const nome = getColValue(row, colNome);
-    const cvLink = getColValue(row, colCv);
-    const liLink = getColValue(row, colLi);
-
-    addLogItem(i, nome);
-
-    const result = { nome, cvLink, liLink, cvResult: null, liResult: null, error: null };
-
-    try {
-      // CURRÍCULO
-      if (modo !== "linkedin" && cvLink) {
-        updateLogItem(i, "processing", "Baixando PDF...");
-        const cvText = await extractPdfText(cvLink);
-        updateLogItem(i, "processing", "Analisando currículo...");
-        result.cvResult = await callClaude(CV_PROMPT, `Nome: ${nome}\n\n${cvText}`);
-      }
-
-      // LINKEDIN
-      if (modo !== "curriculo" && liLink) {
-        updateLogItem(i, "done-cv", "Buscando LinkedIn...");
-        const liData = await fetchLinkedInProfile(apifyKey, liLink);
-        if (liData) {
-          updateLogItem(i, "processing", "Analisando LinkedIn...");
-          const liText = JSON.stringify(liData, null, 2);
-          result.liResult = await callClaude(LI_PROMPT, `Nome: ${nome}\n\n${liText}`);
-        }
-      }
-
-      updateLogItem(i, "done", "✓ Concluído");
-
-    } catch (e) {
-      result.error = e.message;
-      updateLogItem(i, "error", `✗ ${e.message.slice(0, 50)}`);
-    }
-
-    allResults.push(result);
-
-    const pct = Math.round(((i + 1) / rows.length) * 100);
-    document.getElementById("progress-bar").style.width = pct + "%";
-    document.getElementById("progress-count").textContent = `${i + 1} / ${rows.length}`;
-
-    // Rate limiting: wait between candidates
-    if (i < rows.length - 1) await sleep(3000);
-  }
-
-  renderCards();
-  document.getElementById("results-panel").classList.add("show");
-  document.getElementById("total-count").textContent = `${allResults.length} candidatos`;
-  btn.disabled = false;
-}
-
 // ─── RENDER CARDS ─────────────────────────────────────────────────
 function renderCards() {
   const container = document.getElementById("cards-container");
   container.innerHTML = "";
-
   allResults.forEach((r, idx) => {
-    const cvOk = r.cvResult ? r.cvResult.secoes.filter(s => s.status === "ok").length : 0;
-    const cvTotal = r.cvResult ? r.cvResult.secoes.length : 0;
-    const liOk = r.liResult ? r.liResult.secoes.filter(s => s.status === "ok").length : 0;
-    const liTotal = r.liResult ? r.liResult.secoes.length : 0;
+    const cvOk = r.cvResult?.secoes?.filter(s => s.status === "ok").length || 0;
+    const cvTotal = r.cvResult?.secoes?.length || 0;
+    const liOk = r.liResult?.secoes?.filter(s => s.status === "ok").length || 0;
+    const liTotal = r.liResult?.secoes?.length || 0;
 
     const card = document.createElement("div");
     card.className = "card";
@@ -775,12 +635,12 @@ function renderCards() {
         <div class="card-scores">
           ${r.cvResult ? `<span class="score-badge cv">CV ${cvOk}/${cvTotal}</span>` : ""}
           ${r.liResult ? `<span class="score-badge li">LI ${liOk}/${liTotal}</span>` : ""}
-          ${r.error ? `<span class="score-badge" style="border-color:var(--error);color:var(--error)">Erro</span>` : ""}
+          ${r.error ? `<span class="score-badge" style="border-color:var(--error);color:var(--error)">⚠</span>` : ""}
         </div>
         <span class="card-toggle" id="toggle-${idx}">▼</span>
       </div>
       <div class="card-body" id="body-${idx}">
-        ${r.error ? `<p style="font-family:'Space Mono',monospace;font-size:12px;color:var(--error)">Erro: ${r.error}</p>` : ""}
+        ${r.error ? `<p style="font-family:'Space Mono',monospace;font-size:12px;color:var(--warn);margin-bottom:12px">⚠ ${r.error}</p>` : ""}
         ${renderCardBody(r, idx)}
       </div>
     `;
@@ -790,11 +650,8 @@ function renderCards() {
 
 function renderCardBody(r, idx) {
   if (!r.cvResult && !r.liResult) return "";
-
-  let html = "";
-
   if (r.cvResult && r.liResult) {
-    html += `
+    return `
       <div class="section-tabs">
         <button class="stab active" onclick="switchStab(${idx},'cv',this)">📄 Currículo</button>
         <button class="stab" onclick="switchStab(${idx},'li',this)">💼 LinkedIn</button>
@@ -802,42 +659,23 @@ function renderCardBody(r, idx) {
       <div id="stab-cv-${idx}">${renderCriteria(r.cvResult)}</div>
       <div id="stab-li-${idx}" style="display:none">${renderCriteria(r.liResult)}</div>
     `;
-  } else if (r.cvResult) {
-    html += renderCriteria(r.cvResult);
-  } else if (r.liResult) {
-    html += renderCriteria(r.liResult);
   }
-
-  return html;
+  return renderCriteria(r.cvResult || r.liResult);
 }
 
 function renderCriteria(result) {
   let html = '<div class="criteria-list">';
   result.secoes.forEach(s => {
-    html += `
-      <div class="crit ${s.status}">
-        <div class="crit-top">
-          <span>${s.emoji}</span>
-          <span class="crit-name">${s.nome}</span>
-          <span class="crit-st">${s.status_texto}</span>
-        </div>
-        <p class="crit-fb">${s.feedback}</p>
-      </div>
-    `;
+    html += `<div class="crit ${s.status}"><div class="crit-top"><span>${s.emoji}</span><span class="crit-name">${s.nome}</span><span class="crit-st">${s.status_texto}</span></div><p class="crit-fb">${s.feedback}</p></div>`;
   });
-  html += "</div>";
-  html += `<div class="general-box"><h4>Comentário Geral</h4><p>${result.comentario_geral}</p></div>`;
-  return html;
+  return html + `</div><div class="general-box"><h4>Comentário Geral</h4><p>${result.comentario_geral}</p></div>`;
 }
 
 function toggleCard(idx) {
   const body = document.getElementById(`body-${idx}`);
-  const header = body.previousElementSibling;
-  const toggle = document.getElementById(`toggle-${idx}`);
-  const isOpen = body.classList.contains("open");
   body.classList.toggle("open");
-  header.classList.toggle("open");
-  toggle.textContent = isOpen ? "▼" : "▲";
+  body.previousElementSibling.classList.toggle("open");
+  document.getElementById(`toggle-${idx}`).textContent = body.classList.contains("open") ? "▲" : "▼";
 }
 
 function switchStab(idx, tab, btn) {
@@ -850,51 +688,31 @@ function switchStab(idx, tab, btn) {
 // ─── CSV EXPORT ───────────────────────────────────────────────────
 function exportarTudo() {
   if (!allResults.length) return;
-
-  // Build unified CSV with all criteria as columns
   const cvCols = allResults.find(r => r.cvResult)?.cvResult?.secoes?.map(s => `CV — ${s.emoji} ${s.nome}`) || [];
   const liCols = allResults.find(r => r.liResult)?.liResult?.secoes?.map(s => `LI — ${s.emoji} ${s.nome}`) || [];
+  const headers = ["Nome", "Link LinkedIn", ...cvCols, "CV — Comentário Geral", ...liCols, "LI — Comentário Geral", "Observações"];
 
-  const headers = ["Nome", "Link CV", "Link LinkedIn", ...cvCols, "CV — Comentário Geral", ...liCols, "LI — Comentário Geral", "Erro"];
-
-  const csvLines = [headers.map(h => `"${h}"`).join(",")];
-
+  const lines = [headers.map(h => `"${h}"`).join(",")];
   allResults.forEach(r => {
     const row = [
-      r.nome,
-      r.cvLink || "",
-      r.liLink || "",
-      ...(cvCols.map((_, i) => {
-        const s = r.cvResult?.secoes?.[i];
-        return s ? `${s.status_texto} — ${s.feedback}` : "";
-      })),
+      r.nome, r.liLink || "",
+      ...cvCols.map((_, i) => { const s = r.cvResult?.secoes?.[i]; return s ? `${s.status_texto} — ${s.feedback}` : ""; }),
       r.cvResult?.comentario_geral || "",
-      ...(liCols.map((_, i) => {
-        const s = r.liResult?.secoes?.[i];
-        return s ? `${s.status_texto} — ${s.feedback}` : "";
-      })),
+      ...liCols.map((_, i) => { const s = r.liResult?.secoes?.[i]; return s ? `${s.status_texto} — ${s.feedback}` : ""; }),
       r.liResult?.comentario_geral || "",
       r.error || ""
     ];
-    csvLines.push(row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","));
+    lines.push(row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","));
   });
 
-  const blob = new Blob(["\uFEFF" + csvLines.join("\n")], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
+  const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
-  a.href = url;
-  a.download = `analise-lote-pda-${new Date().toISOString().slice(0,10)}.csv`;
+  a.href = URL.createObjectURL(blob);
+  a.download = `analise-pda-${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
-  URL.revokeObjectURL(url);
 }
 </script>
-
-<!-- PDF.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script>
-  if (window.pdfjsLib) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  }
-</script>
+<script>if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 </body>
 </html>
