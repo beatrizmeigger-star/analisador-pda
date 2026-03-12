@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analisador PdA — Lote</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow: #D4E000;
+    --black: #0A0A0A;
+    --dark: #111111;
+    --mid: #1C1C1C;
+    --border: #2A2A2A;
+    --text: #E8E8E8;
+    --muted: #666;
+    --ok: #7CFF6B;
+    --warn: #FFB800;
+    --error: #FF4D4D;
+    --blue: #4DA6FF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--black);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--black);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: var(--yellow);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    flex-shrink: 0;
+  }
+
+  header h1 { font-size: 14px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--yellow); }
+  header span { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); margin-left: auto; }
+
+  .main { max-width: 1000px; margin: 0 auto; padding: 36px 24px 80px; }
+
+  /* CONFIG PANEL */
+  .config-panel {
+    background: var(--dark);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .config-panel h2 {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .config-panel h2::before {
+    content: ''; display: inline-block; width: 6px; height: 6px;
+    background: var(--yellow); border-radius: 50%;
+  }
+
+  .field { margin-bottom: 14px; }
+
+  label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 5px; letter-spacing: 0.05em; text-transform: uppercase; }
+
+  input[type="text"], input[type="password"], input[type="url"], select {
+    width: 100%; background: var(--mid); border: 1px solid var(--border);
+    border-radius: 3px; color: var(--text); font-family: 'Space Mono', monospace;
+    font-size: 13px; padding: 10px 14px; outline: none; transition: border-color 0.2s;
+  }
+
+  input:focus, select:focus { border-color: var(--yellow); }
+  select { cursor: pointer; }
+
+  .hint { font-size: 11px; color: var(--muted); margin-top: 5px; font-family: 'Space Mono', monospace; }
+
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  /* COLUMN MAPPER */
+  .col-mapper {
+    background: var(--mid);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 16px;
+    margin-top: 8px;
+  }
+
+  .col-mapper p {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  /* ANALYZE BUTTON */
+  .btn-analyze {
+    width: 100%; background: var(--yellow); color: var(--black);
+    border: none; border-radius: 3px; font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 14px; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 16px; cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s; margin-top: 8px;
+  }
+
+  .btn-analyze:hover { opacity: 0.9; }
+  .btn-analyze:active { transform: scale(0.99); }
+  .btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* PROGRESS */
+  .progress-panel {
+    display: none;
+    background: var(--dark);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    margin-top: 20px;
+  }
+
+  .progress-panel.show { display: block; }
+
+  .progress-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
+  }
+
+  .progress-header h3 { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--yellow); }
+
+  .progress-bar-wrap { background: var(--border); border-radius: 2px; height: 4px; margin-bottom: 20px; overflow: hidden; }
+
+  .progress-bar { height: 100%; background: var(--yellow); border-radius: 2px; transition: width 0.4s; width: 0%; }
+
+  /* CANDIDATE LOG */
+  .candidate-log { display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto; }
+
+  .log-item {
+    background: var(--mid);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border);
+    border-radius: 3px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .log-item.processing { border-left-color: var(--blue); }
+  .log-item.done-cv { border-left-color: var(--warn); }
+  .log-item.done { border-left-color: var(--ok); }
+  .log-item.error { border-left-color: var(--error); }
+
+  .log-name { font-size: 13px; font-weight: 600; flex: 1; }
+
+  .log-status {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .log-item.processing .log-status { color: var(--blue); }
+  .log-item.done .log-status { color: var(--ok); }
+  .log-item.done-cv .log-status { color: var(--warn); }
+  .log-item.error .log-status { color: var(--error); }
+
+  .spinner-sm {
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* RESULTS TABLE */
+  .results-panel {
+    display: none;
+    margin-top: 24px;
+  }
+
+  .results-panel.show { display: block; }
+
+  .results-top {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+  }
+
+  .results-top h3 { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--yellow); }
+
+  .btn-export {
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    background: none; border: 1px solid var(--border); color: var(--text);
+    padding: 8px 14px; border-radius: 3px; cursor: pointer; transition: border-color 0.2s;
+  }
+
+  .btn-export:hover { border-color: var(--yellow); color: var(--yellow); }
+
+  /* CANDIDATE CARDS */
+  .cards { display: flex; flex-direction: column; gap: 16px; }
+
+  .card {
+    background: var(--dark);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid transparent;
+    transition: background 0.15s;
+  }
+
+  .card-header:hover { background: var(--mid); }
+  .card-header.open { border-bottom-color: var(--border); }
+
+  .card-name { font-size: 15px; font-weight: 700; flex: 1; }
+
+  .card-scores { display: flex; gap: 8px; }
+
+  .score-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 2px;
+    background: var(--mid);
+    border: 1px solid var(--border);
+  }
+
+  .score-badge.cv { border-color: var(--warn); color: var(--warn); }
+  .score-badge.li { border-color: var(--blue); color: var(--blue); }
+
+  .card-toggle { font-size: 12px; color: var(--muted); }
+
+  .card-body { display: none; padding: 20px; }
+  .card-body.open { display: block; }
+
+  .section-tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+
+  .stab {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    background: var(--mid);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 12px;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+
+  .stab.active { background: var(--border); color: var(--text); border-color: var(--yellow); }
+
+  .criteria-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .crit {
+    background: var(--mid);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border);
+    border-radius: 3px;
+    padding: 12px 16px;
+  }
+
+  .crit.ok { border-left-color: var(--ok); }
+  .crit.aviso { border-left-color: var(--warn); }
+  .crit.erro { border-left-color: var(--error); }
+
+  .crit-top { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+  .crit-name { font-size: 13px; font-weight: 600; flex: 1; }
+  .crit-st { font-family: 'Space Mono', monospace; font-size: 11px; }
+  .crit.ok .crit-st { color: var(--ok); }
+  .crit.aviso .crit-st { color: var(--warn); }
+  .crit.erro .crit-st { color: var(--error); }
+  .crit-fb { font-family: 'Space Mono', monospace; font-size: 12px; color: #999; line-height: 1.6; }
+
+  .general-box {
+    background: var(--black);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 14px 16px;
+    margin-top: 12px;
+  }
+
+  .general-box h4 { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .general-box p { font-family: 'Space Mono', monospace; font-size: 12px; line-height: 1.7; color: var(--text); }
+
+  .error-msg {
+    background: rgba(255,77,77,0.08); border: 1px solid rgba(255,77,77,0.3);
+    border-radius: 3px; padding: 12px 16px;
+    font-family: 'Space Mono', monospace; font-size: 12px; color: var(--error);
+    margin-top: 16px; display: none;
+  }
+
+  .error-msg.show { display: block; }
+
+  .info-box {
+    background: rgba(77,166,255,0.06);
+    border: 1px solid rgba(77,166,255,0.2);
+    border-radius: 3px;
+    padding: 12px 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--blue);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 600px) {
+    .row-2, .row-3 { grid-template-columns: 1fr; }
+    header { padding: 14px 16px; }
+    .main { padding: 20px 12px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark"></div>
+  <h1>Analisador PdA — Lote</h1>
+  <span>Currículo & LinkedIn em massa</span>
+</header>
+
+<div class="main">
+
+  <div class="info-box">
+    // Antes de usar: (1) Crie conta em apify.com e obtenha seu API token em Settings → Integrations → API token &nbsp;|&nbsp; (2) Deixe sua Google Sheets pública: Compartilhar → "Qualquer pessoa com o link pode ver"
+  </div>
+
+  <!-- CONFIGURAÇÃO -->
+  <div class="config-panel">
+    <h2>Configuração</h2>
+    <div class="row-2">
+      <div class="field">
+        <label>Chave API Apify</label>
+        <input type="password" id="apify-key" placeholder="apify_api_XXXXXXXX">
+        <p class="hint">// Settings → Integrations → API token no apify.com</p>
+      </div>
+      <div class="field">
+        <label>Modo de análise</label>
+        <select id="modo">
+          <option value="ambos">Currículo + LinkedIn</option>
+          <option value="curriculo">Só Currículo</option>
+          <option value="linkedin">Só LinkedIn</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- GOOGLE SHEETS -->
+  <div class="config-panel">
+    <h2>Google Sheets</h2>
+    <div class="field">
+      <label>Link da Planilha (pública)</label>
+      <input type="url" id="sheets-url" placeholder="https://docs.google.com/spreadsheets/d/XXXX/edit">
+      <p class="hint">// A planilha precisa estar com acesso "Qualquer pessoa com o link pode ver"</p>
+    </div>
+    <div class="row-3">
+      <div class="field">
+        <label>Coluna — Nome</label>
+        <input type="text" id="col-nome" placeholder="Ex: A ou Nome" value="Nome">
+      </div>
+      <div class="field">
+        <label>Coluna — Link CV (PDF)</label>
+        <input type="text" id="col-cv" placeholder="Ex: B ou Currículo" value="Currículo">
+      </div>
+      <div class="field">
+        <label>Coluna — Link LinkedIn</label>
+        <input type="text" id="col-li" placeholder="Ex: C ou LinkedIn" value="Link LinkedIn">
+      </div>
+    </div>
+    <div class="field">
+      <label>Aba da planilha (nome exato)</label>
+      <input type="text" id="sheet-name" placeholder="Ex: Respostas do formulário 1" value="Respostas do formulário 1">
+    </div>
+  </div>
+
+  <button class="btn-analyze" onclick="iniciarAnalise()">⚡ Iniciar Análise em Lote</button>
+
+  <div class="error-msg" id="global-error"></div>
+
+  <!-- PROGRESS -->
+  <div class="progress-panel" id="progress-panel">
+    <div class="progress-header">
+      <h3>// Processando candidatos</h3>
+      <span id="progress-count" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">0 / 0</span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <div class="candidate-log" id="candidate-log"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results-panel" id="results-panel">
+    <div class="results-top">
+      <h3>// Resultados — <span id="total-count"></span></h3>
+      <button class="btn-export" onclick="exportarTudo()">↓ Exportar CSV completo</button>
+    </div>
+    <div class="cards" id="cards-container"></div>
+  </div>
+
+</div>
+
+<script>
+let allResults = [];
+
+// ─── SHEET PARSING ────────────────────────────────────────────────
+function extractSheetId(url) {
+  const m = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  return m ? m[1] : null;
+}
+
+async function fetchSheetData(url, sheetName) {
+  const id = extractSheetId(url);
+  if (!id) throw new Error("Link da planilha inválido.");
+
+  const encoded = encodeURIComponent(sheetName);
+  const csvUrl = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=${encoded}`;
+
+  const res = await fetch(csvUrl);
+  if (!res.ok) throw new Error("Não foi possível acessar a planilha. Verifique se ela está pública.");
+
+  const text = await res.text();
+  return parseCSV(text);
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split("\n");
+  if (lines.length < 2) throw new Error("Planilha sem dados.");
+
+  const headers = parseCSVLine(lines[0]);
+  const rows = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const vals = parseCSVLine(lines[i]);
+    const row = {};
+    headers.forEach((h, idx) => { row[h.trim()] = (vals[idx] || "").trim(); });
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current);
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+// ─── APIFY ────────────────────────────────────────────────────────
+async function fetchLinkedInProfile(apiKey, linkedinUrl) {
+  // Start actor run
+  const startRes = await fetch("https://api.apify.com/v2/acts/2SyF0bVxmgGr8IVCZ/runs?token=" + apiKey, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      profileUrls: [linkedinUrl],
+      proxy: { useApifyProxy: true }
+    })
+  });
+
+  if (!startRes.ok) throw new Error("Erro ao iniciar Apify. Verifique sua chave.");
+  const startData = await startRes.json();
+  const runId = startData.data.id;
+
+  // Poll for completion
+  for (let attempt = 0; attempt < 30; attempt++) {
+    await sleep(4000);
+    const statusRes = await fetch(`https://api.apify.com/v2/actor-runs/${runId}?token=${apiKey}`);
+    const statusData = await statusRes.json();
+    const status = statusData.data.status;
+
+    if (status === "SUCCEEDED") {
+      const datasetId = statusData.data.defaultDatasetId;
+      const itemsRes = await fetch(`https://api.apify.com/v2/datasets/${datasetId}/items?token=${apiKey}`);
+      const items = await itemsRes.json();
+      return items[0] || null;
+    }
+
+    if (status === "FAILED" || status === "ABORTED") throw new Error("Apify falhou ao buscar o perfil.");
+  }
+
+  throw new Error("Timeout ao buscar perfil LinkedIn.");
+}
+
+// ─── CLAUDE API ───────────────────────────────────────────────────
+const CV_PROMPT = `Você é um especialista em empregabilidade do programa "Programadores do Amanhã" (PdA). Analise o currículo abaixo com base nos critérios do guia oficial.
+
+Retorne APENAS um JSON válido, sem texto antes ou depois:
+{
+  "secoes": [
+    {
+      "emoji": "emoji",
+      "nome": "nome da seção",
+      "status": "ok" | "aviso" | "erro",
+      "status_texto": "✅ Tudo certo" | "⚠️ Precisa ajustar" | "❌ Ausente ou incorreto",
+      "feedback": "feedback detalhado"
+    }
+  ],
+  "comentario_geral": "comentário geral"
+}
+
+Critérios (uma seção por item):
+1. 📋 Cabeçalho — Nome completo, celular, email, cidade/estado, link LinkedIn, link GitHub
+2. 🎯 Objetivo — Frase "Atuar como [cargo]" presente e específica
+3. 🤏 Resumo — 3 a 5 linhas, 3ª pessoa, com conquistas, interesses e metas
+4. 🎓 Educação — Formação PdA (720h, tecnologias, atividades), ensino médio, ordem cronológica inversa
+5. 🗂️ Projetos — Descrição, resultados, link de acesso e tecnologias destacadas
+6. 🧑‍💻 Experiência Profissional — Cargo, empresa, duração e descrição com resultados
+7. 📏 Habilidades Técnicas — Lista de hard skills e nível de idiomas
+8. 📚 Cursos — Cursos rápidos com carga horária
+9. 🔚 Conferência Final — Português correto, sem gírias, máximo 2 páginas, ATS-friendly
+
+Currículo:
+`;
+
+const LI_PROMPT = `Você é um especialista em empregabilidade do programa "Programadores do Amanhã" (PdA). Analise o perfil do LinkedIn abaixo.
+
+Retorne APENAS um JSON válido, sem texto antes ou depois:
+{
+  "secoes": [
+    {
+      "emoji": "emoji",
+      "nome": "nome da seção",
+      "status": "ok" | "aviso" | "erro",
+      "status_texto": "✅ Tudo certo" | "⚠️ Precisa ajustar" | "❌ Ausente ou incorreto",
+      "feedback": "feedback detalhado"
+    }
+  ],
+  "comentario_geral": "comentário geral"
+}
+
+Critérios:
+1. 📷 Foto de Perfil — Presente, rosto centralizado, fundo neutro, aparência profissional
+2. 🌇 Capa — Presente, profissional (Canva ou modelo PdA)
+3. 🔠 Título/Headline — Cargo + palavras-chave separadas por barras
+4. 📲 Informações de Contato — Email e telefone visíveis
+5. ✍️ Resumo (Sobre) — Completo com hard/soft skills, conquistas e metas
+6. 💼 Experiências Profissionais — Cargos com resultados descritos
+7. 🎓 Formação Acadêmica — Formação PdA no formato correto (720h, tecnologias, atividades)
+8. 🎖️ Licenças e Certificados — Cursos com carga horária
+9. ⭐ Competências — Habilidades técnicas e interpessoais listadas
+10. 🗂️ Projetos — Projetos com link GitHub e descrição
+11. 🈵 Idiomas — Nível de inglês informado
+12. 🌐 URL Personalizada — Sem números aleatórios, personalizada
+
+Dados do perfil LinkedIn:
+`;
+
+async function callClaude(prompt, content) {
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      messages: [{ role: "user", content: prompt + content }]
+    })
+  });
+
+  if (!response.ok) throw new Error(`Erro Claude API: ${response.status}`);
+  const data = await response.json();
+  const text = data.content.map(i => i.text || "").join("");
+  return JSON.parse(text.replace(/```json|```/g, "").trim());
+}
+
+// ─── PDF TEXT EXTRACTION ──────────────────────────────────────────
+async function extractPdfText(url) {
+  // Convert Google Drive view URL to direct download
+  let directUrl = url;
+  const driveMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (driveMatch) {
+    directUrl = `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`;
+  }
+
+  const res = await fetch(directUrl);
+  if (!res.ok) throw new Error("Não foi possível baixar o PDF. Verifique se está público.");
+
+  const buffer = await res.arrayBuffer();
+
+  // Use PDF.js via CDN
+  if (!window.pdfjsLib) throw new Error("PDF.js não carregado.");
+
+  const pdf = await window.pdfjsLib.getDocument({ data: buffer }).promise;
+  let text = "";
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(item => item.str).join(" ") + "\n";
+  }
+
+  return text;
+}
+
+// ─── MAIN FLOW ────────────────────────────────────────────────────
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function getColValue(row, colName) {
+  if (!colName) return "";
+  // Try exact match first, then case-insensitive
+  if (row[colName] !== undefined) return row[colName];
+  const lower = colName.toLowerCase();
+  const key = Object.keys(row).find(k => k.toLowerCase().includes(lower));
+  return key ? row[key] : "";
+}
+
+function updateLogItem(id, status, statusText) {
+  const el = document.getElementById(`log-${id}`);
+  if (!el) return;
+  el.className = `log-item ${status}`;
+  el.querySelector(".log-status").textContent = statusText;
+  const spinner = el.querySelector(".spinner-sm");
+  if (spinner && status !== "processing") spinner.remove();
+}
+
+function addLogItem(id, name) {
+  const log = document.getElementById("candidate-log");
+  const div = document.createElement("div");
+  div.className = "log-item processing";
+  div.id = `log-${id}`;
+  div.innerHTML = `
+    <div class="spinner-sm"></div>
+    <span class="log-name">${name}</span>
+    <span class="log-status">Iniciando...</span>
+  `;
+  log.appendChild(div);
+}
+
+async function iniciarAnalise() {
+  const apifyKey = document.getElementById("apify-key").value.trim();
+  const sheetsUrl = document.getElementById("sheets-url").value.trim();
+  const sheetName = document.getElementById("sheet-name").value.trim();
+  const colNome = document.getElementById("col-nome").value.trim();
+  const colCv = document.getElementById("col-cv").value.trim();
+  const colLi = document.getElementById("col-li").value.trim();
+  const modo = document.getElementById("modo").value;
+
+  const errEl = document.getElementById("global-error");
+  errEl.classList.remove("show");
+
+  if (!sheetsUrl) { errEl.textContent = "Informe o link da planilha."; errEl.classList.add("show"); return; }
+  if (modo !== "curriculo" && !apifyKey) { errEl.textContent = "Informe a chave da API do Apify para analisar LinkedIn."; errEl.classList.add("show"); return; }
+
+  const btn = document.querySelector(".btn-analyze");
+  btn.disabled = true;
+
+  document.getElementById("progress-panel").classList.add("show");
+  document.getElementById("results-panel").classList.remove("show");
+  document.getElementById("candidate-log").innerHTML = "";
+  allResults = [];
+
+  let rows;
+  try {
+    rows = await fetchSheetData(sheetsUrl, sheetName);
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.classList.add("show");
+    btn.disabled = false;
+    return;
+  }
+
+  // Filter rows with name
+  rows = rows.filter(r => getColValue(r, colNome));
+
+  if (rows.length === 0) {
+    errEl.textContent = "Nenhum candidato encontrado na planilha. Verifique os nomes das colunas.";
+    errEl.classList.add("show");
+    btn.disabled = false;
+    return;
+  }
+
+  document.getElementById("progress-count").textContent = `0 / ${rows.length}`;
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const nome = getColValue(row, colNome);
+    const cvLink = getColValue(row, colCv);
+    const liLink = getColValue(row, colLi);
+
+    addLogItem(i, nome);
+
+    const result = { nome, cvLink, liLink, cvResult: null, liResult: null, error: null };
+
+    try {
+      // CURRÍCULO
+      if (modo !== "linkedin" && cvLink) {
+        updateLogItem(i, "processing", "Baixando PDF...");
+        const cvText = await extractPdfText(cvLink);
+        updateLogItem(i, "processing", "Analisando currículo...");
+        result.cvResult = await callClaude(CV_PROMPT, `Nome: ${nome}\n\n${cvText}`);
+      }
+
+      // LINKEDIN
+      if (modo !== "curriculo" && liLink) {
+        updateLogItem(i, "done-cv", "Buscando LinkedIn...");
+        const liData = await fetchLinkedInProfile(apifyKey, liLink);
+        if (liData) {
+          updateLogItem(i, "processing", "Analisando LinkedIn...");
+          const liText = JSON.stringify(liData, null, 2);
+          result.liResult = await callClaude(LI_PROMPT, `Nome: ${nome}\n\n${liText}`);
+        }
+      }
+
+      updateLogItem(i, "done", "✓ Concluído");
+
+    } catch (e) {
+      result.error = e.message;
+      updateLogItem(i, "error", `✗ ${e.message.slice(0, 50)}`);
+    }
+
+    allResults.push(result);
+
+    const pct = Math.round(((i + 1) / rows.length) * 100);
+    document.getElementById("progress-bar").style.width = pct + "%";
+    document.getElementById("progress-count").textContent = `${i + 1} / ${rows.length}`;
+
+    // Rate limiting: wait between candidates
+    if (i < rows.length - 1) await sleep(3000);
+  }
+
+  renderCards();
+  document.getElementById("results-panel").classList.add("show");
+  document.getElementById("total-count").textContent = `${allResults.length} candidatos`;
+  btn.disabled = false;
+}
+
+// ─── RENDER CARDS ─────────────────────────────────────────────────
+function renderCards() {
+  const container = document.getElementById("cards-container");
+  container.innerHTML = "";
+
+  allResults.forEach((r, idx) => {
+    const cvOk = r.cvResult ? r.cvResult.secoes.filter(s => s.status === "ok").length : 0;
+    const cvTotal = r.cvResult ? r.cvResult.secoes.length : 0;
+    const liOk = r.liResult ? r.liResult.secoes.filter(s => s.status === "ok").length : 0;
+    const liTotal = r.liResult ? r.liResult.secoes.length : 0;
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="card-header" onclick="toggleCard(${idx})">
+        <span class="card-name">${r.nome}</span>
+        <div class="card-scores">
+          ${r.cvResult ? `<span class="score-badge cv">CV ${cvOk}/${cvTotal}</span>` : ""}
+          ${r.liResult ? `<span class="score-badge li">LI ${liOk}/${liTotal}</span>` : ""}
+          ${r.error ? `<span class="score-badge" style="border-color:var(--error);color:var(--error)">Erro</span>` : ""}
+        </div>
+        <span class="card-toggle" id="toggle-${idx}">▼</span>
+      </div>
+      <div class="card-body" id="body-${idx}">
+        ${r.error ? `<p style="font-family:'Space Mono',monospace;font-size:12px;color:var(--error)">Erro: ${r.error}</p>` : ""}
+        ${renderCardBody(r, idx)}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function renderCardBody(r, idx) {
+  if (!r.cvResult && !r.liResult) return "";
+
+  let html = "";
+
+  if (r.cvResult && r.liResult) {
+    html += `
+      <div class="section-tabs">
+        <button class="stab active" onclick="switchStab(${idx},'cv',this)">📄 Currículo</button>
+        <button class="stab" onclick="switchStab(${idx},'li',this)">💼 LinkedIn</button>
+      </div>
+      <div id="stab-cv-${idx}">${renderCriteria(r.cvResult)}</div>
+      <div id="stab-li-${idx}" style="display:none">${renderCriteria(r.liResult)}</div>
+    `;
+  } else if (r.cvResult) {
+    html += renderCriteria(r.cvResult);
+  } else if (r.liResult) {
+    html += renderCriteria(r.liResult);
+  }
+
+  return html;
+}
+
+function renderCriteria(result) {
+  let html = '<div class="criteria-list">';
+  result.secoes.forEach(s => {
+    html += `
+      <div class="crit ${s.status}">
+        <div class="crit-top">
+          <span>${s.emoji}</span>
+          <span class="crit-name">${s.nome}</span>
+          <span class="crit-st">${s.status_texto}</span>
+        </div>
+        <p class="crit-fb">${s.feedback}</p>
+      </div>
+    `;
+  });
+  html += "</div>";
+  html += `<div class="general-box"><h4>Comentário Geral</h4><p>${result.comentario_geral}</p></div>`;
+  return html;
+}
+
+function toggleCard(idx) {
+  const body = document.getElementById(`body-${idx}`);
+  const header = body.previousElementSibling;
+  const toggle = document.getElementById(`toggle-${idx}`);
+  const isOpen = body.classList.contains("open");
+  body.classList.toggle("open");
+  header.classList.toggle("open");
+  toggle.textContent = isOpen ? "▼" : "▲";
+}
+
+function switchStab(idx, tab, btn) {
+  document.querySelectorAll(`#body-${idx} .stab`).forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById(`stab-cv-${idx}`).style.display = tab === "cv" ? "block" : "none";
+  document.getElementById(`stab-li-${idx}`).style.display = tab === "li" ? "block" : "none";
+}
+
+// ─── CSV EXPORT ───────────────────────────────────────────────────
+function exportarTudo() {
+  if (!allResults.length) return;
+
+  // Build unified CSV with all criteria as columns
+  const cvCols = allResults.find(r => r.cvResult)?.cvResult?.secoes?.map(s => `CV — ${s.emoji} ${s.nome}`) || [];
+  const liCols = allResults.find(r => r.liResult)?.liResult?.secoes?.map(s => `LI — ${s.emoji} ${s.nome}`) || [];
+
+  const headers = ["Nome", "Link CV", "Link LinkedIn", ...cvCols, "CV — Comentário Geral", ...liCols, "LI — Comentário Geral", "Erro"];
+
+  const csvLines = [headers.map(h => `"${h}"`).join(",")];
+
+  allResults.forEach(r => {
+    const row = [
+      r.nome,
+      r.cvLink || "",
+      r.liLink || "",
+      ...(cvCols.map((_, i) => {
+        const s = r.cvResult?.secoes?.[i];
+        return s ? `${s.status_texto} — ${s.feedback}` : "";
+      })),
+      r.cvResult?.comentario_geral || "",
+      ...(liCols.map((_, i) => {
+        const s = r.liResult?.secoes?.[i];
+        return s ? `${s.status_texto} — ${s.feedback}` : "";
+      })),
+      r.liResult?.comentario_geral || "",
+      r.error || ""
+    ];
+    csvLines.push(row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","));
+  });
+
+  const blob = new Blob(["\uFEFF" + csvLines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `analise-lote-pda-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+
+<!-- PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+</script>
+</body>
+</html>
