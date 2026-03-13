@@ -630,6 +630,11 @@ async function callClaudeWithImages(systemPrompt, textContent, images, retries =
       if (attempt < retries) { await sleep(60000 * attempt); continue; }
       throw new Error(`Erro Claude API: 429 (limite atingido após ${retries} tentativas)`);
     }
+    if (res.status === 400) {
+      // 400 can happen if images are too large or CORS-blocked — fall back to text-only
+      console.warn("400 com imagens — tentando sem imagens...");
+      return null; // caller will retry text-only
+    }
     if (!res.ok) throw new Error(`Erro Claude API: ${res.status}`);
     const data = await res.json();
     const text = data.content.map(i => i.text || "").join("");
@@ -786,15 +791,20 @@ async function iniciarAnalise() {
             profilePicHighRes: liData.profilePicHighRes,
             profilePictures: liData.profilePictures,
             picture: liData.picture,
+            profilePic: liData.profilePic,
+            profilePicHighQuality: liData.profilePicHighQuality,
           });
           console.log("Apify cover fields:", {
             backgroundImage: liData.backgroundImage,
             backgroundCoverImages: liData.backgroundCoverImages,
             coverImage: liData.coverImage,
             backgroundImageUrl: liData.backgroundImageUrl,
+            backgroundPic: liData.backgroundPic,
           });
 
-          const photoUrl = liData.profilePicture
+          const photoUrl = liData.profilePicHighQuality
+            || liData.profilePic
+            || liData.profilePicture
             || liData.photoUrl
             || liData.img_src
             || liData.profilePicHighRes
@@ -802,11 +812,12 @@ async function iniciarAnalise() {
             || liData.picture
             || null;
 
-          const coverUrl = liData.backgroundImage?.[0]?.url
+          const coverUrl = liData.backgroundPic
+            || liData.backgroundImage?.[0]?.url
             || liData.backgroundCoverImages?.[0]?.url
             || liData.coverImage
             || liData.backgroundImageUrl
-            || (Array.isArray(liData.backgroundImage) ? liData.backgroundImage[0] : liData.backgroundImage)
+            || (typeof liData.backgroundImage === "string" ? liData.backgroundImage : null)
             || null;
 
           console.log("Resolved photoUrl:", photoUrl);
@@ -844,6 +855,10 @@ async function iniciarAnalise() {
           let rawLi;
           if (images.length > 0) {
             rawLi = await callClaudeWithImages(LI_PROMPT, profileText, images);
+            if (!rawLi) {
+              console.warn("Fallback: analisando LinkedIn sem imagens...");
+              rawLi = await callClaude(LI_PROMPT, profileText);
+            }
           } else {
             rawLi = await callClaude(LI_PROMPT, profileText);
           }
