@@ -505,7 +505,7 @@ Receba os dados do currículo do aluno, valide item a item e gere um JSON estrit
 - **Relevância**: Apenas cursos que agreguem à área de tecnologia
 - **Dados**: Nome do curso e carga horária
 
-### 🔚 Revisão Final
+### 🔚  Gramática, Design e Volume
 - **Gramática**: Marque erros de português SOMENTE quando tiver certeza de que é erro do candidato e não artefato de extração de PDF. Palavras quebradas, espaços extras ou letras duplicadas devem ser ignorados. Só aponte erros gramaticais claros e inequívocos.
 - **Design**: Layout limpo, sem excesso de cores ou colunas complexas que dificultem ATS
 - **Volume**: Máximo de 2 páginas (idealmente 1 página para perfis junior)
@@ -648,7 +648,7 @@ function normalizeCvResult(raw) {
     professional_experience: { emoji: "🧑‍💻", nome: "Experiência Profissional" },
     technical_skills: { emoji: "📏", nome: "Habilidades Técnicas" },
     courses: { emoji: "📚", nome: "Cursos" },
-    final_review: { emoji: "🔚", nome: "Revisão Final" }
+    final_review: { emoji: "🔚", nome: " Gramática, Design e Volume" }
   };
   const secoes = Object.entries(raw.sections).map(([key, val]) => {
     const meta = sectionMap[key] || { emoji: "📌", nome: key };
