@@ -823,7 +823,24 @@ async function iniciarAnalise() {
             else console.warn("Falha ao baixar capa (CORS ou URL inválida):", coverUrl);
           }
           updateLogItem(i, "processing", "Analisando LinkedIn...");
-          const profileText = `Nome do candidato: ${nome}\n\n${images.length > 0 ? `Imagens enviadas: ${images.map(img => img.label).join(", ")}\n\n` : "Imagens não disponíveis.\n\n"}Dados do perfil LinkedIn:\n${JSON.stringify(liData, null, 2)}`;
+          // Trim liData to avoid oversized payloads (400 error)
+          const liDataTrimmed = {
+            profileUrl: liData.profileUrl || liData.url || "",
+            fullName: liData.fullName || liData.name || "",
+            headline: liData.headline || liData.title || "",
+            summary: liData.summary || liData.about || "",
+            location: liData.location || liData.addressWithCountry || "",
+            profilePicture: liData.profilePicture || liData.photoUrl || liData.img_src || "",
+            backgroundImage: liData.backgroundImage || liData.coverImage || "",
+            experiences: (liData.experiences || liData.positions?.positionHistory || []).slice(0, 10),
+            education: (liData.education || liData.schools?.educationHistory || []).slice(0, 10),
+            skills: (liData.skills || []).slice(0, 30),
+            certifications: (liData.certifications || liData.licenses || []).slice(0, 10),
+            languages: liData.languages || [],
+            projects: (liData.projects || []).slice(0, 10),
+            volunteering: (liData.volunteering || liData.volunteerExperiences || []).slice(0, 5),
+          };
+          const profileText = `Nome do candidato: ${nome}\n\n${images.length > 0 ? `Imagens enviadas: ${images.map(img => img.label).join(", ")}\n\n` : "Imagens não disponíveis.\n\n"}Dados do perfil LinkedIn:\n${JSON.stringify(liDataTrimmed, null, 2)}`;
           let rawLi;
           if (images.length > 0) {
             rawLi = await callClaudeWithImages(LI_PROMPT, profileText, images);
