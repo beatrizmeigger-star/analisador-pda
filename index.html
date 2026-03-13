@@ -531,51 +531,110 @@ Todo texto em português brasileiro.
 Currículo:\n`;
 
 const LI_PROMPT = `# Role (Papel)
-Você é um especialista em Carreira e Tech Recruiter do projeto "Programadores do Amanhã". Sua função é analisar os dados textuais e estruturais de perfis de LinkedIn de estudantes, cruzando as informações com os Guias oficiais da instituição.
+Você é um especialista em Carreira e Tech Recruiter do projeto "Programadores do Amanhã". Sua função é analisar perfis de LinkedIn de estudantes, cruzando as informações com os Guias oficiais da instituição.
 
 ## Task (Tarefa)
-Receba os dados textuais do perfil do aluno (URL, título, resumo, experiências, formação, etc.), valide item a item e gere um JSON estrito contendo a avaliação. NÃO analise aspectos visuais de imagens (foto e capa).
+Receba os dados do perfil do aluno (URL, título, resumo, experiências, formação, etc.) e as imagens da foto de perfil e capa, valide item a item e gere um JSON estrito contendo a avaliação.
 
 ## Knowledge Base (Regras de Validação)
-1. **URL**: Personalizada (ex: /in/nome-sobrenome). Não pode conter números aleatórios ou URL padrão do LinkedIn.
-2. **Título (Headline)**: Área + Techs (ex: Dev Front-end | React | JavaScript). Não pode conter "Em busca de recolocação", "Desempregado" ou similar.
-3. **Resumo**: Escrito em 1ª pessoa, com storytelling, mencionando tecnologias dominadas e objetivos de carreira. Mínimo 3 parágrafos.
-4. **Experiência**: Foco em resultados quantificados e ferramentas utilizadas. Uso de verbos de ação no início das frases.
-5. **Formação/Cursos**: REGRA ESPECÍFICA PDA: O curso deve estar cadastrado como "Formação em Desenvolvimento Web Full-Stack - Programadores do Amanhã - 720 horas" com mês/ano início-fim, tecnologias (JavaScript, Node.JS, Express, Sequelize, MySQL e React.JS) e atividades realizadas.
-6. **Competências**: Mix equilibrado de Hard skills (tecnologias) e Soft skills.
-7. **Certificados**: Qualquer certificado é válido e deve ser reconhecido positivamente. Se houver poucos, o feedback deve ser encorajador — reconhecer o esforço e sugerir mais certificações como oportunidade de crescimento, não como deficiência.
-8. **Projetos**: Links funcionando, descrição clara do papel e tecnologias aplicadas.
-9. **Idiomas**: Aceite os níveis declarados pelo candidato sem questioná-los. Não exija certificações para validar o nível informado. O feedback deve ser positivo se os idiomas estiverem listados com nível de proficiência.
-10. **Trabalho Voluntário**: Opcional. Se não houver, status deve ser "✅ De acordo com as orientações" com feedback construtivo sobre benefícios do voluntariado.
+1. **Foto de Perfil**: A imagem enviada é a foto de perfil do candidato. Avalie: (a) se há uma foto presente (não é o avatar padrão do LinkedIn), (b) se é uma foto profissional com fundo neutro ou clean, (c) se o rosto está centralizado e bem iluminado, (d) se a vestimenta é adequada para contexto profissional. Seja gentil e encorajador no feedback.
+2. **Imagem de Capa**: A imagem enviada é a capa do perfil. Avalie: (a) se há uma capa personalizada (não é a capa padrão cinza do LinkedIn), (b) se comunica identidade profissional ou área de atuação, (c) se tem boa qualidade visual. Se for a capa padrão, incentive a criar uma personalizada. Seja encorajador.
+3. **URL**: Personalizada (ex: /in/nome-sobrenome). Não pode conter números aleatórios ou URL padrão do LinkedIn.
+4. **Título (Headline)**: Área + Techs (ex: Dev Front-end | React | JavaScript). Não pode conter "Em busca de recolocação", "Desempregado" ou similar.
+5. **Resumo**: Escrito em 1ª pessoa, com storytelling, mencionando tecnologias dominadas e objetivos de carreira. Mínimo 3 parágrafos.
+6. **Experiência**: Foco em resultados quantificados e ferramentas utilizadas. Uso de verbos de ação no início das frases.
+7. **Formação/Cursos**: REGRA ESPECÍFICA PDA: O curso deve estar cadastrado como "Formação em Desenvolvimento Web Full-Stack - Programadores do Amanhã - 720 horas" com mês/ano início-fim, tecnologias (JavaScript, Node.JS, Express, Sequelize, MySQL e React.JS) e atividades realizadas.
+8. **Competências**: Mix equilibrado de Hard skills (tecnologias) e Soft skills.
+9. **Certificados**: Qualquer certificado é válido e deve ser reconhecido positivamente. Se houver poucos, o feedback deve ser encorajador — reconhecer o esforço e sugerir mais certificações como oportunidade de crescimento, não como deficiência.
+10. **Projetos**: Links funcionando, descrição clara do papel e tecnologias aplicadas.
+11. **Idiomas**: Aceite os níveis declarados pelo candidato sem questioná-los. Não exija certificações para validar o nível informado. O feedback deve ser positivo se os idiomas estiverem listados com nível de proficiência.
+12. **Trabalho Voluntário**: Opcional. Se não houver, status deve ser "✅ De acordo com as orientações" com feedback construtivo sobre benefícios do voluntariado.
 
 ## Output
 Retorne APENAS um objeto JSON válido, sem texto adicional ou formatação markdown, seguindo exatamente este schema:
-{"sections":{"custom_url":{"status":"✅ De acordo com as orientações","feedback":""},"headline":{"status":"✅ De acordo com as orientações","feedback":""},"contact_info":{"status":"✅ De acordo com as orientações","feedback":""},"summary":{"status":"✅ De acordo com as orientações","feedback":""},"experience":{"status":"✅ De acordo com as orientações","feedback":""},"education":{"status":"✅ De acordo com as orientações","feedback":""},"licenses_and_certificates":{"status":"✅ De acordo com as orientações","feedback":""},"volunteering":{"status":"✅ De acordo com as orientações","feedback":""},"skills":{"status":"✅ De acordo com as orientações","feedback":""},"projects_and_publications":{"status":"✅ De acordo com as orientações","feedback":""},"languages":{"status":"✅ De acordo com as orientações","feedback":""}},"general_comments":""}
+{"sections":{"photo":{"status":"✅ De acordo com as orientações","feedback":""},"cover_image":{"status":"✅ De acordo com as orientações","feedback":""},"custom_url":{"status":"✅ De acordo com as orientações","feedback":""},"headline":{"status":"✅ De acordo com as orientações","feedback":""},"contact_info":{"status":"✅ De acordo com as orientações","feedback":""},"summary":{"status":"✅ De acordo com as orientações","feedback":""},"experience":{"status":"✅ De acordo com as orientações","feedback":""},"education":{"status":"✅ De acordo com as orientações","feedback":""},"licenses_and_certificates":{"status":"✅ De acordo com as orientações","feedback":""},"volunteering":{"status":"✅ De acordo com as orientações","feedback":""},"skills":{"status":"✅ De acordo com as orientações","feedback":""},"projects_and_publications":{"status":"✅ De acordo com as orientações","feedback":""},"languages":{"status":"✅ De acordo com as orientações","feedback":""}},"general_comments":""}
 
 Status válidos: "✅ De acordo com as orientações" ou "⚠️ Precisa de ajustes"
 EXCEÇÃO volunteering: se não houver voluntariado, usar "✅ De acordo com as orientações" com feedback sobre benefícios.
-EXCEÇÃO education: se formação PdA não estiver no formato correto, usar "⚠️ Precisa de ajustes" com feedback detalhado.
+EXCEÇÃO photo/cover_image: se as imagens não estiverem disponíveis ou não forem enviadas, usar "✅ De acordo com as orientações" com feedback solicitando verificação manual.
 O feedback deve explicar detalhadamente com exemplos concretos. Todo texto em português brasileiro.
 
-Dados:\n`;
+Dados do perfil:\n`;
 
-async function callClaude(systemPrompt, userContent) {
+async function callClaude(systemPrompt, userContent, retries = 3) {
   const anthropicKey = document.getElementById("anthropic-key").value.trim();
   if (!anthropicKey) throw new Error("Informe a chave da API da Anthropic.");
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-api-key": anthropicKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 4000,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userContent }]
-    })
-  });
-  if (!res.ok) throw new Error(`Erro Claude API: ${res.status}`);
-  const data = await res.json();
-  const text = data.content.map(i => i.text || "").join("");
-  return JSON.parse(text.replace(/```json|```/g, "").trim());
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": anthropicKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 4000,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userContent }]
+      })
+    });
+    if (res.status === 429) {
+      if (attempt < retries) {
+        const waitSec = 60 * attempt;
+        console.log(`429 recebido, aguardando ${waitSec}s antes de tentar novamente (tentativa ${attempt}/${retries})...`);
+        await sleep(waitSec * 1000);
+        continue;
+      }
+      throw new Error(`Erro Claude API: 429 (limite atingido após ${retries} tentativas)`);
+    }
+    if (!res.ok) throw new Error(`Erro Claude API: ${res.status}`);
+    const data = await res.json();
+    const text = data.content.map(i => i.text || "").join("");
+    return JSON.parse(text.replace(/```json|```/g, "").trim());
+  }
+}
+
+async function urlToBase64(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(",")[1]);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch { return null; }
+}
+
+async function callClaudeWithImages(systemPrompt, textContent, images, retries = 3) {
+  const anthropicKey = document.getElementById("anthropic-key").value.trim();
+  if (!anthropicKey) throw new Error("Informe a chave da API da Anthropic.");
+  const contentBlocks = [];
+  for (const img of images) {
+    if (img.data) {
+      contentBlocks.push({ type: "image", source: { type: "base64", media_type: img.mediaType || "image/jpeg", data: img.data } });
+    }
+  }
+  contentBlocks.push({ type: "text", text: textContent });
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": anthropicKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 4000,
+        system: systemPrompt,
+        messages: [{ role: "user", content: contentBlocks }]
+      })
+    });
+    if (res.status === 429) {
+      if (attempt < retries) { await sleep(60000 * attempt); continue; }
+      throw new Error(`Erro Claude API: 429 (limite atingido após ${retries} tentativas)`);
+    }
+    if (!res.ok) throw new Error(`Erro Claude API: ${res.status}`);
+    const data = await res.json();
+    const text = data.content.map(i => i.text || "").join("");
+    return JSON.parse(text.replace(/```json|```/g, "").trim());
+  }
 }
 
 // Convert CV result (new schema) to normalized display format
@@ -610,6 +669,8 @@ function normalizeCvResult(raw) {
 // Convert LinkedIn result (new schema) to normalized display format
 function normalizeLiResult(raw) {
   const sectionMap = {
+    photo: { emoji: "📷", nome: "Foto de Perfil" },
+    cover_image: { emoji: "🖼️", nome: "Imagem de Capa" },
     custom_url: { emoji: "🌐", nome: "URL Personalizada" },
     headline: { emoji: "🔠", nome: "Título/Headline" },
     contact_info: { emoji: "📲", nome: "Informações de Contato" },
@@ -713,8 +774,26 @@ async function iniciarAnalise() {
         updateLogItem(i, "processing", "Buscando LinkedIn...");
         const liData = await fetchLinkedInProfile(apifyKey, liLink);
         if (liData) {
+          updateLogItem(i, "processing", "Baixando imagens do perfil...");
+          const images = [];
+          const photoUrl = liData.profilePicture || liData.profilePictures?.[0]?.url || liData.photoUrl || null;
+          const coverUrl = liData.backgroundImage?.[0]?.url || liData.backgroundCoverImages?.[0]?.url || liData.coverImage || null;
+          if (photoUrl) {
+            const photoData = await urlToBase64(photoUrl);
+            if (photoData) images.push({ data: photoData, mediaType: "image/jpeg", label: "foto de perfil" });
+          }
+          if (coverUrl) {
+            const coverData = await urlToBase64(coverUrl);
+            if (coverData) images.push({ data: coverData, mediaType: "image/jpeg", label: "imagem de capa" });
+          }
           updateLogItem(i, "processing", "Analisando LinkedIn...");
-          const rawLi = await callClaude(LI_PROMPT, `Nome do candidato: ${nome}\n\nDados do perfil LinkedIn:\n${JSON.stringify(liData, null, 2)}`);
+          const profileText = `Nome do candidato: ${nome}\n\n${images.length > 0 ? `Imagens enviadas: ${images.map(img => img.label).join(", ")}\n\n` : "Imagens não disponíveis.\n\n"}Dados do perfil LinkedIn:\n${JSON.stringify(liData, null, 2)}`;
+          let rawLi;
+          if (images.length > 0) {
+            rawLi = await callClaudeWithImages(LI_PROMPT, profileText, images);
+          } else {
+            rawLi = await callClaude(LI_PROMPT, profileText);
+          }
           result.liResult = normalizeLiResult(rawLi);
         }
       }
