@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Analista de CV e LinkedIn — PdA</title>
+<title>Analisador de CV e LinkedIn — PdA</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -171,7 +171,7 @@
 
 <header>
   <div class="logo-mark"></div>
-  <h1>Analista de CV e LinkedIn</h1>
+  <h1>Analisador de CV e LinkedIn</h1>
   <span>Currículo & LinkedIn em massa</span>
 </header>
 
@@ -456,6 +456,9 @@ async function fetchLinkedInProfile(apiKey, linkedinUrl) {
 const CV_PROMPT = `# Role (Papel)
 Você é um especialista em Carreira e Tech Recruiter do projeto "Programadores do Amanhã". Sua função é analisar currículos de estudantes, cruzando as informações com os Guias oficiais da instituição.
 
+## AVISO CRÍTICO — Artefatos de extração de PDF
+O texto do currículo foi extraído automaticamente de um PDF e pode conter artefatos técnicos: palavras quebradas no meio ("habilida des", "desen volvedor"), espaços extras, quebras de linha inesperadas ou letras duplicadas. NUNCA interprete esses artefatos como erro do candidato. Antes de apontar qualquer problema de português ou formatação, verifique se o erro pode ser um artefato de extração. Em caso de dúvida, dê o benefício da dúvida ao candidato e NÃO marque como erro.
+
 ## Task (Tarefa)
 Receba os dados do currículo do aluno, valide item a item e gere um JSON estrito contendo a avaliação.
 
@@ -465,8 +468,8 @@ Receba os dados do currículo do aluno, valide item a item e gere um JSON estrit
 - **Nome**: Completo e profissional (evitar apelidos)
 - **Contato**: Deve conter celular (com DDD) e e-mail profissional (sem termos infantis ou apelidos)
 - **Localização**: Apenas Cidade/Estado (não incluir endereço completo/CEP por segurança)
-- **Links**: LinkedIn e GitHub devem ser hiperlinks clicáveis. O link do LinkedIn deve estar limpo (sem números aleatórios no final)
-- **Dados Pessoais**: Estado civil e idade são consideradas informações faltantes (devem estar ausentes do currículo), pois são dados não-necessários para o processo seletivo técnico e podem gerar viés inconsciente
+- **Links**: LinkedIn e GitHub devem estar presentes. Considere qualquer menção a linkedin.com ou github.com como link válido — não tente acessar nem verificar se funcionam, pois o texto extraído do PDF pode não preservar URLs clicáveis.
+- **Dados Pessoais**: Só marque "⚠️ Presença de dados não-necessários" se houver evidência EXPLÍCITA e INEQUÍVOCA de idade, CPF, estado civil ou RG no texto. Não infira nem adivinhe — se não estiver claramente escrito, não marque.
 
 ### 🎯 Objetivo
 - **Especificidade**: Deve ser uma única linha indicando o cargo desejado (ex: "Desenvolvedor Front-end Junior")
@@ -474,20 +477,20 @@ Receba os dados do currículo do aluno, valide item a item e gere um JSON estrit
 - **Campo deve existir e estar preenchido**
 
 ### 🤏 Resumo
-- **Extensão**: Rigorosamente entre 3 a 5 linhas
-- **Conteúdo**: Deve conter o tempo de estudo/experiência, as principais tecnologias (stack) e uma breve menção a soft skills ou conquistas acadêmicas relevantes
+- **Extensão**: O resumo deve ter no máximo 5 linhas de conteúdo real. Considere "linha" como uma frase ou sentença completa — NÃO conte quebras de linha causadas pela largura da página ou artefatos do PDF. Um parágrafo de 2-3 frases conta como 1-2 linhas, não como 5. Só marque como excedido se o conteúdo for genuinamente longo demais.
+- **Conteúdo**: Deve conter o tempo de estudo/experiência, as principais tecnologias (stack) e uma breve menção a soft skills ou conquistas acadêmicas relevantes. O feedback desta seção deve ser útil e específico — comente sobre o conteúdo, não apenas sobre o número de linhas.
 - **Tom**: Escrito em primeira pessoa
 
 ### 🎓 Educação
-- **Destaque PDA**: A formação no "Programadores do Amanhã" deve estar em destaque
-- **Ordem Cronológica Inversa**: Começar sempre pela formação mais recente
+- **Destaque PDA**: A formação no "Programadores do Amanhã" deve estar presente e identificável
+- **Ordem Cronológica Inversa**: Formações simultâneas (com datas sobrepostas ou em andamento ao mesmo tempo) são aceitas em qualquer ordem — NÃO marque como fora de ordem se as datas se sobrepõem. Só marque se uma formação claramente mais antiga aparecer antes de uma mais recente sem sobreposição de datas.
 - **Status**: Deve conter data de início e previsão de conclusão (ou "Concluído")
 - **Dados completos**: Todos os campos obrigatórios preenchidos
 
 ### 🗂️ Projetos
-- **Trindade de Ouro**: Cada projeto deve ter Nome, Descrição Curta, Tecnologias e Link (GitHub ou Deploy)
+- **Trindade de Ouro**: Cada projeto deve ter Nome, Descrição e indicação de Tecnologias. Para links, considere válido qualquer texto que indique a intenção de incluir um link (ex: "Acesse aqui", "GitHub", "Ver projeto") — não tente verificar se os links funcionam, pois URLs não são preservadas na extração de PDF.
 - **Resultados**: A descrição deve focar no "o quê" o projeto resolve e "como" foi feito
-- **Tecnologias**: Devem estar destacadas visualmente ou textualmente em cada projeto
+- **Tecnologias**: Devem estar mencionadas em cada projeto
 
 ### 🧑‍💻 Experiência Profissional
 - **Estrutura**: Cargo, Empresa e Período (Mês/Ano) claramente identificados
@@ -496,14 +499,14 @@ Receba os dados do currículo do aluno, valide item a item e gere um JSON estrit
 
 ### 📏 Habilidades Técnicas
 - **Categorização**: Separar por categorias (ex: Linguagens, Frameworks, Ferramentas)
-- **Idiomas**: Listar o idioma e o nível de proficiência (ex: Inglês - Intermediário)
+- **Idiomas**: Busque menção a idiomas em QUALQUER seção do currículo (habilidades, resumo, formação, cursos). Se encontrar qualquer menção a um idioma com nível (básico, intermediário, avançado, ou equivalente em inglês), considere como atendido. Aceite os níveis declarados pelo candidato sem questioná-los.
 
 ### 📚 Cursos (Opcional)
 - **Relevância**: Apenas cursos que agreguem à área de tecnologia
 - **Dados**: Nome do curso e carga horária
 
 ### 🔚 Revisão Final
-- **Gramática**: Zero erros de digitação ou português
+- **Gramática**: Marque erros de português SOMENTE quando tiver certeza de que é erro do candidato e não artefato de extração de PDF. Palavras quebradas, espaços extras ou letras duplicadas devem ser ignorados. Só aponte erros gramaticais claros e inequívocos.
 - **Design**: Layout limpo, sem excesso de cores ou colunas complexas que dificultem ATS
 - **Volume**: Máximo de 2 páginas (idealmente 1 página para perfis junior)
 
@@ -522,7 +525,7 @@ Status válidos para courses: ["⚠️ Título do Curso","⚠️ Carga horária"
 Status válidos para final_review: ["⚠️ Revisar o português","⚠️ Diminuir número de páginas","Outro: (explique)","✅ Tudo certo"]
 
 Preencha o array status com os problemas encontrados (NUNCA inclua "✅ Tudo certo" junto com avisos). Use APENAS ["✅ Tudo certo"] quando estiver completo.
-O feedback deve explicar detalhadamente com exemplos concretos do currículo.
+O feedback deve ser útil, específico e concreto — comente sobre o conteúdo real do currículo, não apenas sobre formato ou contagem de linhas.
 Todo texto em português brasileiro.
 
 Currículo:\n`;
