@@ -505,7 +505,7 @@ Receba os dados do currículo do aluno, valide item a item e gere um JSON estrit
 - **Relevância**: Apenas cursos que agreguem à área de tecnologia
 - **Dados**: Nome do curso e carga horária
 
-### 🔚  Gramática, Design e Volume
+### 🔚 Revisão Final
 - **Gramática**: Marque erros de português SOMENTE quando tiver certeza de que é erro do candidato e não artefato de extração de PDF. Palavras quebradas, espaços extras ou letras duplicadas devem ser ignorados. Só aponte erros gramaticais claros e inequívocos.
 - **Design**: Layout limpo, sem excesso de cores ou colunas complexas que dificultem ATS
 - **Volume**: Máximo de 2 páginas (idealmente 1 página para perfis junior)
@@ -584,10 +584,7 @@ async function callClaude(systemPrompt, userContent, retries = 3) {
       }
       throw new Error(`Erro Claude API: 429 (limite atingido após ${retries} tentativas)`);
     }
-    if (!res.ok) {
-      const errBody = await res.json().catch(() => ({}));
-      throw new Error(`Erro Claude API: ${res.status} — ${errBody?.error?.message || "sem detalhes"}`);
-    }
+    if (!res.ok) throw new Error(`Erro Claude API: ${res.status}`);
     const data = await res.json();
     const text = data.content.map(i => i.text || "").join("");
     return JSON.parse(text.replace(/```json|```/g, "").trim());
@@ -633,10 +630,7 @@ async function callClaudeWithImages(systemPrompt, textContent, images, retries =
       if (attempt < retries) { await sleep(60000 * attempt); continue; }
       throw new Error(`Erro Claude API: 429 (limite atingido após ${retries} tentativas)`);
     }
-    if (!res.ok) {
-      const errBody = await res.json().catch(() => ({}));
-      throw new Error(`Erro Claude API: ${res.status} — ${errBody?.error?.message || "sem detalhes"}`);
-    }
+    if (!res.ok) throw new Error(`Erro Claude API: ${res.status}`);
     const data = await res.json();
     const text = data.content.map(i => i.text || "").join("");
     return JSON.parse(text.replace(/```json|```/g, "").trim());
@@ -654,7 +648,7 @@ function normalizeCvResult(raw) {
     professional_experience: { emoji: "🧑‍💻", nome: "Experiência Profissional" },
     technical_skills: { emoji: "📏", nome: "Habilidades Técnicas" },
     courses: { emoji: "📚", nome: "Cursos" },
-    final_review: { emoji: "🔚", nome: " Gramática, Design e Volume" }
+    final_review: { emoji: "🔚", nome: "Revisão Final" }
   };
   const secoes = Object.entries(raw.sections).map(([key, val]) => {
     const meta = sectionMap[key] || { emoji: "📌", nome: key };
@@ -782,15 +776,51 @@ async function iniciarAnalise() {
         if (liData) {
           updateLogItem(i, "processing", "Baixando imagens do perfil...");
           const images = [];
-          const photoUrl = liData.profilePicture || liData.profilePictures?.[0]?.url || liData.photoUrl || null;
-          const coverUrl = liData.backgroundImage?.[0]?.url || liData.backgroundCoverImages?.[0]?.url || liData.coverImage || null;
+
+          // Log Apify fields to help debug — visible in browser console (F12)
+          console.log("Apify liData keys:", Object.keys(liData));
+          console.log("Apify photo fields:", {
+            profilePicture: liData.profilePicture,
+            photoUrl: liData.photoUrl,
+            img_src: liData.img_src,
+            profilePicHighRes: liData.profilePicHighRes,
+            profilePictures: liData.profilePictures,
+            picture: liData.picture,
+          });
+          console.log("Apify cover fields:", {
+            backgroundImage: liData.backgroundImage,
+            backgroundCoverImages: liData.backgroundCoverImages,
+            coverImage: liData.coverImage,
+            backgroundImageUrl: liData.backgroundImageUrl,
+          });
+
+          const photoUrl = liData.profilePicture
+            || liData.photoUrl
+            || liData.img_src
+            || liData.profilePicHighRes
+            || liData.profilePictures?.[0]?.url
+            || liData.picture
+            || null;
+
+          const coverUrl = liData.backgroundImage?.[0]?.url
+            || liData.backgroundCoverImages?.[0]?.url
+            || liData.coverImage
+            || liData.backgroundImageUrl
+            || (Array.isArray(liData.backgroundImage) ? liData.backgroundImage[0] : liData.backgroundImage)
+            || null;
+
+          console.log("Resolved photoUrl:", photoUrl);
+          console.log("Resolved coverUrl:", coverUrl);
+
           if (photoUrl) {
             const photoData = await urlToBase64(photoUrl);
             if (photoData) images.push({ data: photoData, mediaType: "image/jpeg", label: "foto de perfil" });
+            else console.warn("Falha ao baixar foto de perfil (CORS ou URL inválida):", photoUrl);
           }
           if (coverUrl) {
             const coverData = await urlToBase64(coverUrl);
             if (coverData) images.push({ data: coverData, mediaType: "image/jpeg", label: "imagem de capa" });
+            else console.warn("Falha ao baixar capa (CORS ou URL inválida):", coverUrl);
           }
           updateLogItem(i, "processing", "Analisando LinkedIn...");
           const profileText = `Nome do candidato: ${nome}\n\n${images.length > 0 ? `Imagens enviadas: ${images.map(img => img.label).join(", ")}\n\n` : "Imagens não disponíveis.\n\n"}Dados do perfil LinkedIn:\n${JSON.stringify(liData, null, 2)}`;
