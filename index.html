@@ -584,7 +584,10 @@ async function callClaude(systemPrompt, userContent, retries = 3) {
       }
       throw new Error(`Erro Claude API: 429 (limite atingido após ${retries} tentativas)`);
     }
-    if (!res.ok) throw new Error(`Erro Claude API: ${res.status}`);
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      throw new Error(`Erro Claude API: ${res.status} — ${errBody?.error?.message || "sem detalhes"}`);
+    }
     const data = await res.json();
     const text = data.content.map(i => i.text || "").join("");
     return JSON.parse(text.replace(/```json|```/g, "").trim());
