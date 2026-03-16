@@ -221,10 +221,17 @@
   <!-- LINKEDIN + MODO -->
   <div class="config-panel">
     <h2>LinkedIn & Configuração</h2>
-    <div class="field">
-      <label>Chave API Anthropic (Claude)</label>
-      <input type="password" id="anthropic-key" placeholder="sk-ant-...">
-      <p class="hint">// Necessária para análise com IA — fica salva só no seu navegador</p>
+    <div class="row-2">
+      <div class="field">
+        <label>Chave API DeepSeek</label>
+        <input type="password" id="anthropic-key" placeholder="sk-...">
+        <p class="hint">// Para análise de CV e LinkedIn (texto)</p>
+      </div>
+      <div class="field">
+        <label>Chave API Gemini (foto e capa)</label>
+        <input type="password" id="gemini-key" placeholder="AIza... (opcional)">
+        <p class="hint">// Para análise visual de foto e capa do LinkedIn</p>
+      </div>
     </div>
     <div class="row-2">
       <div class="field">
@@ -562,17 +569,19 @@ O feedback deve explicar detalhadamente com exemplos concretos. Todo texto em po
 Dados do perfil:\n`;
 
 async function callClaude(systemPrompt, userContent, retries = 3) {
-  const anthropicKey = document.getElementById("anthropic-key").value.trim();
-  if (!anthropicKey) throw new Error("Informe a chave da API da Anthropic.");
+  const apiKey = document.getElementById("anthropic-key").value.trim();
+  if (!apiKey) throw new Error("Informe a chave da API do DeepSeek.");
   for (let attempt = 1; attempt <= retries; attempt++) {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch("https://api.deepseek.com/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-api-key": anthropicKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + apiKey },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "deepseek-chat",
         max_tokens: 4000,
-        system: systemPrompt,
-        messages: [{ role: "user", content: userContent }]
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent }
+        ]
       })
     });
     if (res.status === 429) {
@@ -582,11 +591,15 @@ async function callClaude(systemPrompt, userContent, retries = 3) {
         await sleep(waitSec * 1000);
         continue;
       }
-      throw new Error(`Erro Claude API: 429 (limite atingido após ${retries} tentativas)`);
+      throw new Error(`Erro DeepSeek API: 429 (limite atingido após ${retries} tentativas)`);
     }
-    if (!res.ok) throw new Error(`Erro Claude API: ${res.status}`);
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      console.error(`Erro DeepSeek API ${res.status}:`, JSON.stringify(errBody));
+      throw new Error(`Erro DeepSeek API: ${res.status}`);
+    }
     const data = await res.json();
-    const text = data.content.map(i => i.text || "").join("");
+    const text = data.choices?.[0]?.message?.content || "";
     return JSON.parse(text.replace(/```json|```/g, "").trim());
   }
 }
@@ -606,38 +619,45 @@ async function urlToBase64(url) {
 }
 
 async function callClaudeWithImages(systemPrompt, textContent, images, retries = 3) {
-  const anthropicKey = document.getElementById("anthropic-key").value.trim();
-  if (!anthropicKey) throw new Error("Informe a chave da API da Anthropic.");
-  const contentBlocks = [];
+  const geminiKey = document.getElementById("gemini-key").value.trim();
+  if (!geminiKey) {
+    // No Gemini key — fall back to DeepSeek text-only
+    console.log("Chave Gemini não informada — analisando foto/capa sem visão.");
+    return await callClaude(systemPrompt, textContent, retries);
+  }
+
+  // Build Gemini parts: images first, then text
+  const parts = [];
   for (const img of images) {
     if (img.data) {
-      contentBlocks.push({ type: "image", source: { type: "base64", media_type: img.mediaType || "image/jpeg", data: img.data } });
+      parts.push({ inline_data: { mime_type: img.mediaType || "image/jpeg", data: img.data } });
     }
   }
-  contentBlocks.push({ type: "text", text: textContent });
+  parts.push({ text: systemPrompt + "\n\n" + textContent });
+
   for (let attempt = 1; attempt <= retries; attempt++) {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-api-key": anthropicKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 4000,
-        system: systemPrompt,
-        messages: [{ role: "user", content: contentBlocks }]
-      })
-    });
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts }] })
+      }
+    );
     if (res.status === 429) {
       if (attempt < retries) { await sleep(60000 * attempt); continue; }
-      throw new Error(`Erro Claude API: 429 (limite atingido após ${retries} tentativas)`);
+      throw new Error(`Erro Gemini API: 429 (limite atingido após ${retries} tentativas)`);
     }
-    if (res.status === 400) {
-      // 400 can happen if images are too large or CORS-blocked — fall back to text-only
-      console.warn("400 com imagens — tentando sem imagens...");
-      return null; // caller will retry text-only
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      console.error(`Erro Gemini API ${res.status}:`, JSON.stringify(errBody));
+      // Fall back to DeepSeek text-only on error
+      console.warn("Erro no Gemini — usando DeepSeek sem imagens como fallback.");
+      return await callClaude(systemPrompt, textContent, retries);
     }
-    if (!res.ok) throw new Error(`Erro Claude API: ${res.status}`);
     const data = await res.json();
-    const text = data.content.map(i => i.text || "").join("");
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    if (!text) throw new Error("Gemini retornou resposta vazia.");
     return JSON.parse(text.replace(/```json|```/g, "").trim());
   }
 }
@@ -725,7 +745,7 @@ async function iniciarAnalise() {
   errEl.classList.remove("show");
 
   if (!sheetsUrl) { errEl.textContent = "Informe o link da planilha."; errEl.classList.add("show"); return; }
-  if (!document.getElementById("anthropic-key").value.trim()) { errEl.textContent = "Informe a chave da API da Anthropic."; errEl.classList.add("show"); return; }
+  if (!document.getElementById("anthropic-key").value.trim()) { errEl.textContent = "Informe a chave da API do DeepSeek."; errEl.classList.add("show"); return; }
   if (modo !== "linkedin" && !Object.keys(uploadedPDFs).length) { errEl.textContent = "Faça upload dos PDFs dos currículos."; errEl.classList.add("show"); return; }
 
   const btn = document.querySelector(".btn-analyze");
@@ -785,20 +805,11 @@ async function iniciarAnalise() {
           // Log Apify fields to help debug — visible in browser console (F12)
           console.log("Apify liData keys:", Object.keys(liData));
           console.log("Apify photo fields:", {
-            profilePicture: liData.profilePicture,
-            photoUrl: liData.photoUrl,
-            img_src: liData.img_src,
-            profilePicHighRes: liData.profilePicHighRes,
-            profilePictures: liData.profilePictures,
-            picture: liData.picture,
             profilePic: liData.profilePic,
             profilePicHighQuality: liData.profilePicHighQuality,
+            profilePicAllDimensions: liData.profilePicAllDimensions,
           });
           console.log("Apify cover fields:", {
-            backgroundImage: liData.backgroundImage,
-            backgroundCoverImages: liData.backgroundCoverImages,
-            coverImage: liData.coverImage,
-            backgroundImageUrl: liData.backgroundImageUrl,
             backgroundPic: liData.backgroundPic,
           });
 
